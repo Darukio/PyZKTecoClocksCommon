@@ -20,41 +20,16 @@
 import logging
 import eventlet
 import configparser
+
 config = configparser.ConfigParser()
+from .shared_state import SharedState
+from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
 from .connection import get_attendance_count, get_attendances
 from .device_manager import get_device_info, retry_network_operation
-from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
 from ..utils.file_manager import create_folder_and_return_path, find_root_directory, save_attendances_to_file
 from .hour_manager import update_battery_status, update_device_time_single
 from datetime import datetime
 import os
-import threading
-import eventlet
-from eventlet.green import threading
-
-class SharedState:
-    def __init__(self):
-        self.total_devices = 0
-        self.processed_devices = 0
-        self.lock = threading.Lock()
-
-    def increment_processed_devices(self):
-        with self.lock:
-            self.processed_devices += 1
-            return self.processed_devices
-
-    def calculate_progress(self):
-        with self.lock:
-            if self.total_devices > 0:
-                return int((self.processed_devices / self.total_devices) * 100)
-            return 0
-
-    def set_total_devices(self, total):
-        with self.lock:
-            self.total_devices = total
-
-    def get_total_devices(self):
-        return self.total_devices
 
 def manage_device_attendances(from_service=False, emit_progress=None):
     logging.debug(f'desde_service = {from_service}')
