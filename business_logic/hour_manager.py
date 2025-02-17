@@ -47,7 +47,7 @@ def update_device_time(selected_devices=None, from_service=False, emit_progress=
         pool = eventlet.GreenPool(coroutines_pool_max_size)
         
         if selected_devices:
-            selected_ips = {device['ip'] for device in active_devices}
+            selected_ips = {device['ip'] for device in selected_devices}
 
             active_devices = [device for device in device_info if device['ip'] in selected_ips]
         elif from_service:
