@@ -22,9 +22,8 @@ import eventlet
 import os
 import configparser
 
-from .shared_state import SharedState
 config = configparser.ConfigParser()
-from .connection import connect, end_connection, ping_device, restart_device
+from .connection import connect, end_connection, ping_device
 from ..utils.errors import ConnectionFailedError, OutdatedTimeError
 from ..utils.file_manager import find_root_directory, load_from_file
 
@@ -159,7 +158,10 @@ def retry_network_operation(op, args=(), kwargs={}, max_attempts=3, from_service
                     update_device_name(conn, args[0])
                 result = op(conn, from_service)
                 logging.debug(f'{args} FINALIZANDO!')
-                end_connection(conn, args[0])
+                try:
+                    end_connection(conn, args[0])
+                except Exception as e:
+                    pass
                 logging.debug(f'{args} FINALIZADO!')
                 break
         except OutdatedTimeError as e:
@@ -181,70 +183,3 @@ def retry_network_operation(op, args=(), kwargs={}, max_attempts=3, from_service
                 
     logging.debug(f'{args} RESULTADO!')
     return result
-
-def restart_devices(selected_devices=None, emit_progress=None):
-    device_info = []
-    try:
-        # Get all devices in a formatted list
-        device_info = get_device_info()
-    except Exception as e:
-        logging.error(e)
-
-    if device_info:
-        gt = []
-        active_devices = []
-        config.read(os.path.join(find_root_directory(), 'config.ini'))
-        coroutines_pool_max_size = int(config['Cpu_config']['coroutines_pool_max_size'])
-
-        # Create a pool of green threads
-        state = SharedState()
-        pool = eventlet.GreenPool(coroutines_pool_max_size)
-        
-        if selected_devices:
-            selected_ips = {device['ip'] for device in active_devices}
-
-            active_devices = [device for device in device_info if device['ip'] in selected_ips]
-
-        # Set the total number of devices in the shared state
-        state.set_total_devices(len(active_devices))
-        
-        for active_device in active_devices:
-            try:
-                gt.append(pool.spawn(restart_device_single, active_device, emit_progress, state))
-            except Exception as e:
-                pass
-
-        devices_with_error = []
-            
-        for active_device, g in zip(active_devices, gt):
-            logging.debug(f'Processing {active_device}')
-            try:
-                g.wait()
-            except Exception as e:
-                devices_with_error = str(e)
-                logging.error(e, e.__cause__)
-            
-        if len(devices_with_error) > 0:
-            return devices_with_error
-
-        logging.debug('TERMINE REINICIO!')
-
-def restart_device_single(info, emit_progress, state):
-    try:
-        retry_network_operation(restart_device, args=(info['ip'], 4370, info['communication'],))
-    except ConnectionFailedError as e:
-        raise info['ip'] from e
-    except Exception as e:
-        raise e
-    finally:
-        try:
-            # Update the number of processed devices and progress
-            processed_devices = state.increment_processed_devices()
-            if emit_progress:
-                progress = state.calculate_progress()
-                emit_progress(percent_progress=progress, device_progress=info["ip"], processed_devices=processed_devices, total_devices=state.get_total_devices())
-                logging.debug(f"processed_devices: {processed_devices}/{state.get_total_devices()}, progress: {progress}%")
-        except Exception as e:
-            logging.error(e)
-
-    return
