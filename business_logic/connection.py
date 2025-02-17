@@ -24,8 +24,8 @@ import eventlet
 from zk import ZK, ZK_helper
 import configparser
 config = configparser.ConfigParser()
-from utils.errors import OutdatedTimeError
-from utils.file_manager import find_root_directory
+from ..utils.errors import OutdatedTimeError
+from ..utils.file_manager import find_root_directory
 
 def connect(ip, port, communication):
     conn = None

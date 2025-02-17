@@ -22,9 +22,9 @@ import eventlet
 import os
 import configparser
 config = configparser.ConfigParser()
-from business_logic.connection import connect, end_connection, ping_device
-from utils.errors import ConnectionFailedError, OutdatedTimeError
-from utils.file_manager import find_root_directory, load_from_file
+from .connection import connect, end_connection, ping_device
+from ..utils.errors import ConnectionFailedError, OutdatedTimeError
+from ..utils.file_manager import find_root_directory, load_from_file
 
 def organize_device_info(line):
     # Split the line into parts using the separator " - "

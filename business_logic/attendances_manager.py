@@ -21,10 +21,10 @@ import logging
 import eventlet
 import configparser
 config = configparser.ConfigParser()
-from business_logic.connection import get_attendance_count, get_attendances
-from business_logic.device_manager import get_device_info, retry_network_operation
-from utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
-from utils.file_manager import create_folder_and_return_path, find_root_directory, save_attendances_to_file
+from .connection import get_attendance_count, get_attendances
+from .device_manager import get_device_info, retry_network_operation
+from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
+from ..utils.file_manager import create_folder_and_return_path, find_root_directory, save_attendances_to_file
 from .hour_manager import update_battery_status, update_device_time_single
 from datetime import datetime
 import os

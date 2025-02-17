@@ -22,8 +22,8 @@ import eventlet
 import os
 import configparser
 config = configparser.ConfigParser()
-from business_logic.device_manager import get_device_info, retry_network_operation
-from utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
+from .device_manager import get_device_info, retry_network_operation
+from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
 from .connection import *
 
 def update_device_time(from_service=False, emit_progress=None):
