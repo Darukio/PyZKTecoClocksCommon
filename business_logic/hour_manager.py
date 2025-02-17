@@ -21,12 +21,14 @@ import logging
 import eventlet
 import os
 import configparser
+
 config = configparser.ConfigParser()
-from .device_manager import get_device_info, retry_network_operation
+from .shared_state import SharedState
 from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
+from .device_manager import get_device_info, retry_network_operation
 from .connection import *
 
-def update_device_time(from_service=False, emit_progress=None):
+def update_device_time(selected_devices=None, from_service=False, emit_progress=None):
     device_info = []
     try:
         # Get all devices in a formatted list
@@ -36,24 +38,33 @@ def update_device_time(from_service=False, emit_progress=None):
 
     if device_info:
         gt = []
+        active_devices = []
         config.read(os.path.join(find_root_directory(), 'config.ini'))
         coroutines_pool_max_size = int(config['Cpu_config']['coroutines_pool_max_size'])
+
         # Create a pool of green threads
+        state = SharedState()
         pool = eventlet.GreenPool(coroutines_pool_max_size)
         
-        for info in device_info:
-            # If the device is active...
-            if eval(info["active"]) or from_service:
-                logging.debug(info)
-                # Launch a coroutine for each active device
-                try:
-                    gt.append(pool.spawn(update_device_time_single, info))
-                except Exception as e:
-                    pass
+        if selected_devices:
+            selected_ips = {device['ip'] for device in active_devices}
+
+            active_devices = [device for device in device_info if device['ip'] in selected_ips]
+        elif from_service:
+            active_devices = device_info
+
+        # Set the total number of devices in the shared state
+        state.set_total_devices(len(active_devices))
         
+        for active_device in active_devices:
+            try:
+                gt.append(pool.spawn(update_device_time_single, active_device, from_service, emit_progress, state))
+            except Exception as e:
+                pass
+            
         device_with_battery_failing = []
-        # Wait for all coroutines in the pool to finish
-        for g in gt:
+        for active_device, g in zip(active_devices, gt):
+            logging.debug(f'Processing {active_device}')
             try:
                 g.wait()
             except BatteryFailingError as e:
@@ -73,15 +84,27 @@ def update_device_time(from_service=False, emit_progress=None):
 
         logging.debug('TERMINE HORA!')
 
-def update_device_time_single(info):
+def update_device_time_single(info, from_service, emit_progress, state):
     try:
-        retry_network_operation(update_time, args=(info['ip'], 4370, info['communication'],))
+        retry_network_operation(update_time, args=(info['ip'], 4370, info['communication'],), from_service=from_service)
     except ConnectionFailedError as e:
         raise NetworkError(info['model_name'], info['point'], info['ip'])
     except OutdatedTimeError as e:
         raise BatteryFailingError(info["model_name"], info["point"], info["ip"])
     except Exception as e:
         raise e
+    finally:
+        try:
+            # Update the number of processed devices and progress
+            processed_devices = state.increment_processed_devices()
+            if emit_progress:
+                progress = state.calculate_progress()
+                emit_progress(percent_progress=progress, device_progress=info["ip"], processed_devices=processed_devices, total_devices=state.get_total_devices())
+                logging.debug(f"processed_devices: {processed_devices}/{state.get_total_devices()}, progress: {progress}%")
+        except Exception as e:
+            logging.error(e)
+
+    return
 
 def update_battery_status(p_ip):
     with open('info_devices.txt', 'r') as file:
