@@ -75,7 +75,7 @@ def update_device_time(selected_devices=None, from_service=False, emit_progress=
 
         logging.debug("Cantidad de dispositivos con fallos de pila: "+str(len(device_with_battery_failing)))
         if len(device_with_battery_failing) > 0:
-            logging.debug("Dispositivos con fallos de pila: "+device_with_battery_failing)
+            logging.debug("Dispositivos con fallos de pila: "+str(device_with_battery_failing))
             for ip in device_with_battery_failing:
                 try:
                     update_battery_status(ip)
@@ -83,6 +83,7 @@ def update_device_time(selected_devices=None, from_service=False, emit_progress=
                     logging.error(f"Error al actualizar el estado de bateria del dispositivo {e.ip}: {e}")
 
         logging.debug('TERMINE HORA!')
+        return
 
 def update_device_time_single(info, from_service, emit_progress, state):
     try:
