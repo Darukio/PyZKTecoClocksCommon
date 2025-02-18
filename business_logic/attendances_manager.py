@@ -23,12 +23,13 @@ import configparser
 
 config = configparser.ConfigParser()
 from .shared_state import SharedState
-from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
+from ..utils.errors import BaseError, BatteryFailingError, ConnectionFailedError, NetworkError
 from .connection import get_attendance_count, get_attendances
 from .device_manager import get_device_info, retry_network_operation
 from ..utils.file_manager import create_folder_and_return_path, find_root_directory, save_attendances_to_file
 from .hour_manager import update_battery_status, update_device_time_single
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 import os
 
 def manage_device_attendances(from_service=False, emit_progress=None):
@@ -148,6 +149,11 @@ def maping_dictionary(number):
     # Optional: Handle unspecified cases
     else:
         return 0
+    
+def is_three_months_old(timestamp):
+    now = datetime.now()
+    three_months_ago = now - relativedelta(months=3)  # Restar exactamente 3 meses
+    return timestamp <= three_months_ago
 
 def format_attendances(attendances, id):
     formatted_attendances = []
@@ -160,6 +166,8 @@ def format_attendances(attendances, id):
             "status": maping_dictionary(int(attendance.status)),
         }
         formatted_attendances.append(attendance_formatted)
+        if is_three_months_old(attendance.timestamp):
+            BaseError(2003, attendance_formatted, level="warning")
     return formatted_attendances
 
 def manage_individual_attendances(info, attendances):
