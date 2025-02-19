@@ -85,7 +85,7 @@ def update_device_time(selected_devices=None, from_service=False, emit_progress=
         logging.debug('TERMINE HORA!')
         return
 
-def update_device_time_single(info, from_service, emit_progress, state):
+def update_device_time_single(info, from_service=False, emit_progress=None, state=None):
     try:
         retry_network_operation(update_time, args=(info['ip'], 4370, info['communication'],), from_service=from_service)
     except ConnectionFailedError as e:
