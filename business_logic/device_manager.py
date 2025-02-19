@@ -21,7 +21,8 @@ import logging
 import eventlet
 import os
 import configparser
-
+import time
+import random
 config = configparser.ConfigParser()
 from .connection import connect, end_connection, ping_device
 from ..utils.errors import ConnectionFailedError, OutdatedTimeError
@@ -116,7 +117,7 @@ def update_device_name(conn, ip):
             try:
                 serial_number = conn.get_serialnumber()
                 device_name = serial_number
-                if serial_number == "52355702520030":
+                if serial_number == "5235702520030":
                     device_name = "MultiBio700/ID"
             except Exception as e:
                 logging.error(f"Error al obtener el nombre del dispositivo {ip}: {e}")
@@ -138,8 +139,14 @@ def update_device_name(conn, ip):
                 file.writelines(new_lines)
         except Exception as e:
             logging.error(f"Error al reemplazar el nombre del dispositivo: {e}")
+            raise e
+        return device_name
     except Exception as e:
         pass
+
+def exponential_backoff(attempt):
+    wait_time = min(2 ** attempt + random.uniform(0, 1), 30)
+    time.sleep(wait_time)
 
 def retry_network_operation(op, args=(), kwargs={}, max_attempts=3, from_service=False):
     config.read(os.path.join(find_root_directory(), 'config.ini'))
@@ -154,8 +161,6 @@ def retry_network_operation(op, args=(), kwargs={}, max_attempts=3, from_service
                 conn = connect(*args)
             if conn:
                 logging.debug(f'{args} OPERACION DE RED!')
-                if not from_service:
-                    update_device_name(conn, args[0])
                 result = op(conn, from_service)
                 logging.debug(f'{args} FINALIZANDO!')
                 try:
@@ -176,7 +181,7 @@ def retry_network_operation(op, args=(), kwargs={}, max_attempts=3, from_service
                 raise ConnectionFailedError(error_message) from e
             else:
                 ConnectionFailedError(error_message)
-            eventlet.sleep(0)
+            exponential_backoff(_)
         except Exception as e:
             logging.error("3: "+str(e))
             pass
