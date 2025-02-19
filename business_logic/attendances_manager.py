@@ -25,7 +25,7 @@ config = configparser.ConfigParser()
 from .shared_state import SharedState
 from ..utils.errors import BaseError, BatteryFailingError, ConnectionFailedError, NetworkError
 from .connection import get_attendance_count, get_attendances
-from .device_manager import get_device_info, retry_network_operation
+from .device_manager import get_device_info, retry_network_operation, update_device_name
 from ..utils.file_manager import create_folder_and_return_path, find_root_directory, save_attendances_to_file
 from .hour_manager import update_battery_status, update_device_time_single
 from datetime import datetime
@@ -99,7 +99,8 @@ def manage_device_attendance_single(info, from_service, emit_progress, state):
             attendances = retry_network_operation(get_attendances, args=(info['ip'], 4370, info['communication'],), from_service=from_service)
             attendances = format_attendances(attendances, info["id"])
             logging.info(f'{info["ip"]} - Length attendances: {len(attendances)} - Attendances: {attendances}')
-            
+            if not from_service:
+                info['model_name'] = retry_network_operation(update_device_name, args=(info['ip'], 4370, info['communication'],),)
             manage_individual_attendances(info, attendances)
             manage_global_attendances(attendances)
         except ConnectionFailedError as e:
