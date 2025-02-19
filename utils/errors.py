@@ -66,9 +66,9 @@ class BaseError(Exception):
 class BaseErrorWithMessageBox(BaseError):
     """Base class for errors with logging and message box support."""
 
-    def __init__(self, error_code, extra_info="", level="error"):
+    def __init__(self, error_code, extra_info="", level="error", parent=None):
         super().__init__(error_code, extra_info, level)
-        QMessageBox.critical(None, f"Error {self.code}", self.message)
+        QMessageBox.critical(parent, f"Error {self.code}", self.message)
 
 # Error and warning classes
 class ConnectionFailedError(BaseError):
