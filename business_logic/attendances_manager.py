@@ -24,8 +24,7 @@ import configparser
 config = configparser.ConfigParser()
 from .shared_state import SharedState
 from ..utils.errors import BaseError, BatteryFailingError, ConnectionFailedError, NetworkError
-from .connection import get_attendance_count, get_attendances
-from .device_manager import get_device_info, retry_network_operation, update_device_name
+from .device_manager import get_device_info, network_operation_with_retry
 from ..utils.file_manager import create_folder_and_return_path, find_root_directory, save_attendances_to_file
 from .hour_manager import update_battery_status, update_device_time_single
 from datetime import datetime
@@ -96,11 +95,12 @@ def manage_device_attendances(from_service=False, emit_progress=None):
 def manage_device_attendance_single(info, from_service, emit_progress, state):
     try:
         try:
-            attendances = retry_network_operation(get_attendances, args=(info['ip'], 4370, info['communication'],), from_service=from_service)
+            attendances = network_operation_with_retry("get_attendances", ip=info['ip'], port=4370, communication=info['communication'], from_service=from_service)
+            logging.info(f'{info["ip"]} - PREFORMATEO - Longitud marcaciones: {len(attendances)} - Marcaciones: {attendances}')
             attendances = format_attendances(attendances, info["id"])
-            logging.info(f'{info["ip"]} - Length attendances: {len(attendances)} - Attendances: {attendances}')
+            logging.info(f'{info["ip"]} - POSTFORMATEO - Longitud marcaciones: {len(attendances)} - Marcaciones: {attendances}')
             if not from_service:
-                info['model_name'] = retry_network_operation(update_device_name, args=(info['ip'], 4370, info['communication'],),)
+                info['model_name'] = network_operation_with_retry("update_device_name", ip=info['ip'], port=4370, communication=info['communication'])
             manage_individual_attendances(info, attendances)
             manage_global_attendances(attendances)
         except ConnectionFailedError as e:
@@ -153,7 +153,7 @@ def maping_dictionary(number):
     
 def is_three_months_old(timestamp):
     now = datetime.now()
-    three_months_ago = now - relativedelta(months=3)  # Restar exactamente 3 meses
+    three_months_ago = now - relativedelta(months=3)
     return timestamp <= three_months_ago
 
 def format_attendances(attendances, id):
@@ -167,7 +167,7 @@ def format_attendances(attendances, id):
             "status": maping_dictionary(int(attendance.status)),
         }
         formatted_attendances.append(attendance_formatted)
-        if is_three_months_old(attendance.timestamp):
+        if is_three_months_old(attendance.timestamp) or attendance.timestamp > datetime.now():
             BaseError(2003, attendance_formatted, level="warning")
     return formatted_attendances
 
@@ -241,12 +241,10 @@ def get_device_attendance_count(emit_progress=None):
 
 def get_device_attendance_count_single(info):
     try:
-        records = retry_network_operation(get_attendance_count, args=(info["ip"], 4370, info['communication'],))
+        records = network_operation_with_retry("get_attendance_count", ip=info['ip'], port=4370, communication=info['communication'])
         logging.debug(f'IP: {info["ip"]} - Records: {records}')
         return records
     except ConnectionFailedError as e:
         raise NetworkError(info['model_name'], info['point'], info['ip'])
     except Exception as e:
         raise e
-
-    return
