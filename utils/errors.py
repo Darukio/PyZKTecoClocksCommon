@@ -17,30 +17,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# import json
+import json
 import logging
-# import os
+import os
 from PyQt5.QtWidgets import QMessageBox
 
-# from utils.file_manager import find_marker_directory
+from utils.file_manager import find_marker_directory
 
 # Load errors from JSON
-# with open(os.path.join(find_marker_directory("json"), "json", "errors.json"), encoding="utf-8") as f:
-#    ERRORS = json.load(f)
-
-ERRORS = {
-    "0000": "Error desconocido",
-    "1000": "Error al conectar con el dispositivo",
-    "1001": "Error de red",
-    "2000": "Error de dispositivo",
-    "2001": "Error de pila fallando",
-    "2002": "Error al reiniciar el dispositivo",
-    "2003": "Error de fecha incorrecta en marcacion",
-    "3000": "Error de aplicacion",
-    "3001": "Error de carga de archivo",
-    "3500": "Error de interfaz grafica",
-    "3501": "Error al inicializar ventana",
-}
+with open(os.path.join(find_marker_directory("json"), "json", "errors.json"), encoding="utf-8") as f:
+    ERRORS = json.load(f)
 
 class BaseError(Exception):
     """Base class for errors with logging support."""
