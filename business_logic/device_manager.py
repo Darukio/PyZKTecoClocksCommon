@@ -22,169 +22,74 @@ import eventlet
 import os
 import configparser
 import time
-import random
+
 config = configparser.ConfigParser()
-from .connection import connect, end_connection, ping_device
+from .connection_manager import ConnectionManager, ping_device
 from ..utils.errors import ConnectionFailedError, OutdatedTimeError
 from ..utils.file_manager import find_root_directory, load_from_file
 
 def organize_device_info(line):
-    # Split the line into parts using the separator " - "
+    """Parses a line of text and returns a dictionary with device details."""
     parts = line.strip().split(" - ")
-    # Check that there are exactly 7 parts in the line
-    if len(parts) == 8:
-        # Return an object with attributes
-        return {
-            "district_name": parts[0],
-            "model_name": parts[1],
-            "point": parts[2],
-            "ip": parts[3],
-            "id": parts[4],
-            "communication": parts[5],
-            "battery": parts[6],
-            "active": parts[7]
-        }
-    else:
-        # If there are not exactly 8 parts, return None
-        return None
+    if len(parts) != 8:
+        return None  # Invalid format, return None
+    
+    keys = ["district_name", "model_name", "point", "ip", "id", "communication", "battery", "active"]
+    return dict(zip(keys, parts))
 
 def get_device_info():
-    # Get the location of the text file
+    """Loads device information from a file and returns a list of dictionaries."""
     file_path = os.path.join(find_root_directory(), 'info_devices.txt')
-    # Get the device info from info_devices.txt
-    data_list = load_from_file(file_path)
-    device_info = []
-    # Iterate over the different devices
-    for data in data_list:
-        # Create a device object from the unformatted line
-        line = organize_device_info(data)
-        if line:
-            # Append the device to the device list
-            device_info.append(line)
-    return device_info
+    return [device for data in load_from_file(file_path) if (device := organize_device_info(data))]
 
-def ping_devices(emit_progress=None):
-    device_info = None
-    try:
-        # Get all devices in a formatted list
-        device_info = get_device_info()
-    except Exception as e:
-        logging.error(e)
-
-    results = {}
-
-    if device_info:
-        gt = []
-        active_devices = []
-        config.read(os.path.join(find_root_directory(), 'config.ini'))
-        coroutines_pool_max_size = int(config['Cpu_config']['coroutines_pool_max_size'])
-        
-        # Create a pool of green threads
-        pool = eventlet.GreenPool(coroutines_pool_max_size)
-        for info in device_info:
-            if eval(info["active"]):
-                try:
-                    gt.append(pool.spawn(ping_device, info["ip"], 4370))
-                except Exception as e:
-                    pass
-                active_devices.append(info)
-
-        for active_device, g in zip(active_devices, gt):
-            response = g.wait()
-            if response:
-                status = "Conexión exitosa"
-            else:
-                status = "Conexión fallida"
-
-            # Save the information in results
-            results[active_device["ip"]] = {
-                "point": active_device["point"],
-                "district_name": active_device["district_name"],
-                "id": active_device["id"],
-                "status": status
-            }
-
-        print('TERMINE PING!')
-        logging.debug('TERMINE PING!')
-
-    return results
-
-def update_device_name(conn, ip):
-    try:
-        device_name = conn.get_device_name()
-        device_name = device_name.replace(" ", "")
-        if not device_name:
-            try:
-                serial_number = conn.get_serialnumber()
-                device_name = serial_number
-                if serial_number == "5235702520030":
-                    device_name = "MultiBio700/ID"
-            except Exception as e:
-                logging.error(f"Error al obtener el nombre del dispositivo {ip}: {e}")
-                device_name = "NoName"
-        try:
-            with open('info_devices.txt', 'r') as file:
-                lines = file.readlines()
-
-            new_lines = []
-            for line in lines:
-                parts = line.strip().split(' - ')
-
-                if parts[3] == ip and parts[1] != device_name:
-                    logging.debug(f'Reemplazando nombre del dispositivo {ip}... {parts[1]} por {device_name}')
-                    parts[1] = device_name
-                new_lines.append(' - '.join(parts) + '\n')
-
-            with open('info_devices.txt', 'w') as file:
-                file.writelines(new_lines)
-        except Exception as e:
-            logging.error(f"Error al reemplazar el nombre del dispositivo: {e}")
-            raise e
-        return device_name
-    except Exception as e:
-        pass
-
-def exponential_backoff(attempt):
-    wait_time = min(2 ** attempt + random.uniform(0, 1), 30)
-    time.sleep(wait_time)
-
-def retry_network_operation(op, args=(), kwargs={}, max_attempts=3, from_service=False):
+def network_operation_with_retry(op, ip, port, communication, max_attempts=3, from_service=False):
     config.read(os.path.join(find_root_directory(), 'config.ini'))
     max_attempts = int(config['Network_config']['retry_connection'])
     result = None
-    conn = None
-
+    try:
+        conn_manager = ConnectionManager(ip, port, communication, from_service=from_service)
+    except Exception as e:
+        logging.error(str(e))
+    
     for _ in range(max_attempts):
         try:
-            logging.debug(f'{args} CONECTANDO!')
-            if conn is None:
-                conn = connect(*args)
-            if conn:
-                logging.debug(f'{args} OPERACION DE RED!')
-                result = op(conn, from_service)
-                logging.debug(f'{args} FINALIZANDO!')
+            logging.debug(f'{ip} CONECTANDO!')
+            if not conn_manager.is_connected():
+                start_time = time.time()
+                conn_manager.connect()
+                end_time = time.time()
+                logging.debug(f'{ip} CONECTADO! {end_time-start_time:.2f}')
+            if conn_manager.is_connected():
+                logging.debug(f'{ip} OPERACION DE RED!')
+                start_time = time.time()
+                if hasattr(conn_manager, op):
+                    func = getattr(conn_manager, op)
+                    result = func()
+                else:
+                    raise AttributeError(f"La funcion '{op}' no existe en ConnectionManager")
+                end_time = time.time()
+                logging.debug(f'{ip} FINALIZANDO OPERACION DE RED! {end_time-start_time:.2f}')
                 try:
-                    end_connection(conn, args[0])
+                    conn_manager.end_connection()
                 except Exception as e:
                     pass
-                logging.debug(f'{args} FINALIZADO!')
+                logging.debug(f'{ip} FINALIZADO!')
                 break
         except OutdatedTimeError as e:
-            logging.error("2: "+str(e))
+            logging.error(str(e))
             raise e
         except ConnectionRefusedError as e:
-            conn = None
+            conn_manager.reset_connection()
             if result:
                 break
-            error_message = f"Intento fallido {_ + 1} de {max_attempts} del dispositivo {args[0]} para la operacion {op.__name__}: {e.__cause__}"
+            error_message = f"Intento fallido {_ + 1} de {max_attempts} del dispositivo {ip} para la operacion {op}: {e.__cause__}"
             if _ + 1 == max_attempts:
                 raise ConnectionFailedError(error_message) from e
             else:
                 ConnectionFailedError(error_message)
-            exponential_backoff(_)
         except Exception as e:
-            logging.error("3: "+str(e))
+            logging.error(str(e))
             pass
                 
-    logging.debug(f'{args} RESULTADO!')
+    logging.debug(f'{ip} RESULTADO!')
     return result
