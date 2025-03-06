@@ -22,13 +22,14 @@ import eventlet
 import os
 import configparser
 
+from ..utils.file_manager import find_root_directory
+
 config = configparser.ConfigParser()
 from .shared_state import SharedState
-from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError
-from .device_manager import get_device_info, retry_network_operation
-from .connection import *
+from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError, OutdatedTimeError
+from .device_manager import get_device_info, network_operation_with_retry
 
-def update_device_time(selected_devices=None, from_service=False, emit_progress=None):
+def update_devices_time(selected_devices=None, from_service=False, emit_progress=None):
     device_info = []
     try:
         # Get all devices in a formatted list
@@ -63,13 +64,18 @@ def update_device_time(selected_devices=None, from_service=False, emit_progress=
                 pass
             
         device_with_battery_failing = []
+        device_error = {}
         for active_device, g in zip(active_devices, gt):
             logging.debug(f'Processing {active_device}')
+            device_error[active_device['ip']] = { "connection failed": False, "battery failing": False }
             try:
                 g.wait()
             except BatteryFailingError as e:
                 logging.error(f"Error al actualizar la hora del dispositivo {e.ip}: {e} - {e.__cause__}")
                 device_with_battery_failing.append(e.ip)
+                device_error[active_device['ip']]["battery failing"] = True
+            except NetworkError as e:
+                device_error[active_device['ip']]["connection failed"] = True
             except Exception as e:
                 logging.error(e, e.__cause__)
 
@@ -83,11 +89,11 @@ def update_device_time(selected_devices=None, from_service=False, emit_progress=
                     logging.error(f"Error al actualizar el estado de bateria del dispositivo {e.ip}: {e}")
 
         logging.debug('TERMINE HORA!')
-        return
+        return device_error
 
 def update_device_time_single(info, from_service=False, emit_progress=None, state=None):
     try:
-        retry_network_operation(update_time, args=(info['ip'], 4370, info['communication'],), from_service=from_service)
+        network_operation_with_retry("update_time", ip=info['ip'], port=4370, communication=info['communication'], from_service=from_service)
     except ConnectionFailedError as e:
         raise NetworkError(info['model_name'], info['point'], info['ip'])
     except OutdatedTimeError as e:
@@ -96,12 +102,13 @@ def update_device_time_single(info, from_service=False, emit_progress=None, stat
         raise e
     finally:
         try:
-            # Update the number of processed devices and progress
-            processed_devices = state.increment_processed_devices()
-            if emit_progress:
-                progress = state.calculate_progress()
-                emit_progress(percent_progress=progress, device_progress=info["ip"], processed_devices=processed_devices, total_devices=state.get_total_devices())
-                logging.debug(f"processed_devices: {processed_devices}/{state.get_total_devices()}, progress: {progress}%")
+            if state:
+                # Update the number of processed devices and progress
+                processed_devices = state.increment_processed_devices()
+                if emit_progress:
+                    progress = state.calculate_progress()
+                    emit_progress(percent_progress=progress, device_progress=info["ip"], processed_devices=processed_devices, total_devices=state.get_total_devices())
+                    logging.debug(f"processed_devices: {processed_devices}/{state.get_total_devices()}, progress: {progress}%")
         except Exception as e:
             logging.error(e)
 
