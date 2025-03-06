@@ -84,7 +84,6 @@ def save_attendances_to_file(attendances, file):
 
 def find_marker_directory(marker, current_path=os.path.abspath(os.path.dirname(__file__))):
     while current_path != os.path.dirname(current_path):  # While not reaching the root of the file system
-        #logging.debug(f"Buscando en: {os.path.join(current_path, marker)}")
         if os.path.exists(os.path.join(current_path, marker)):
             return current_path
         current_path = os.path.dirname(current_path)
@@ -93,12 +92,10 @@ def find_marker_directory(marker, current_path=os.path.abspath(os.path.dirname(_
 
 def find_root_directory():
     path = None
-    #logging.debug(f'SE EJECUTA DESDE EXE?: {getattr(sys, 'frozen', False)}')
     if getattr(sys, 'frozen', False):
         path = os.path.dirname(sys.executable)
     else:
         marker = "main.py"
-        #logging.debug(path)
         path = find_marker_directory(marker)
 
     return path
