@@ -21,8 +21,7 @@ import json
 import logging
 import os
 from PyQt5.QtWidgets import QMessageBox
-
-from utils.file_manager import find_marker_directory
+from .file_manager import find_marker_directory
 
 # Load errors from JSON
 with open(os.path.join(find_marker_directory("json"), "json", "errors.json"), encoding="utf-8") as f:
