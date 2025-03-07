@@ -81,6 +81,14 @@ class ConnectionManager():
             except Exception as e:
                 pass
         except Exception as e:
+            if "TCP packet invalid" in str(e):
+                raise ConnectionRefusedError("Error de paquete TCP inválido") from e
+            elif "timed out" in str(e):
+                raise ConnectionRefusedError("Error de tiempo de espera agotado") from e
+            elif "[WinError 10040]" in str(e):
+                raise ConnectionRefusedError("Error de tamaño de mensaje") from e
+            elif "[WinError 10057]" in str(e):
+                raise ConnectionRefusedError("Error de socket no conectado") from e
             raise ConnectionRefusedError from e
         eventlet.sleep(0)
         return self.conn
@@ -206,6 +214,14 @@ class ConnectionManager():
 
                 return attendances
         except Exception as e:
+            if "TCP packet invalid" in str(e):
+                raise ConnectionRefusedError("Error de paquete TCP invalido") from e
+            elif "timed out" in str(e):
+                raise ConnectionRefusedError("Error de tiempo de espera agotado") from e
+            elif "[WinError 10040]" in str(e):
+                raise ConnectionRefusedError("Error de tamaño de mensaje") from e
+            elif "[WinError 10057]" in str(e):
+                raise ConnectionRefusedError("Error de socket no conectado") from e
             raise ConnectionRefusedError from e
 
     def get_attendance_count(self):
@@ -242,6 +258,14 @@ class ConnectionManager():
                     raise result['exception']
             return
         except Exception as e:
+            if "TCP packet invalid" in str(e):
+                raise ConnectionRefusedError("Error de paquete TCP inválido") from e
+            elif "timed out" in str(e):
+                raise ConnectionRefusedError("Error de tiempo de espera agotado") from e
+            elif "[WinError 10040]" in str(e):
+                raise ConnectionRefusedError("Error de tamaño de mensaje") from e
+            elif "[WinError 10057]" in str(e):
+                raise ConnectionRefusedError("Error de socket no conectado") from e
             raise ConnectionRefusedError from e
         
     def update_device_name(self):
