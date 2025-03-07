@@ -1,0 +1,3 @@
+[submodule "connection"]
+	path = connection
+	url = https://github.com/Darukio/pyzk.git

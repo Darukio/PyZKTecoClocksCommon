@@ -22,7 +22,7 @@ import os
 from datetime import datetime
 import threading
 import eventlet
-from zk import ZK, ZK_helper
+from ..connection.zk.base import ZK, ZK_helper
 import configparser
 config = configparser.ConfigParser()
 from ..utils.errors import OutdatedTimeError
