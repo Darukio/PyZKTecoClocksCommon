@@ -156,6 +156,10 @@ def is_three_months_old(timestamp):
     three_months_ago = now - relativedelta(months=3)
     return timestamp <= three_months_ago
 
+def is_in_the_future(timestamp):
+    now = datetime.now()
+    return timestamp > now
+
 def format_attendances(attendances, id):
     formatted_attendances = []
     for attendance in attendances:
@@ -167,7 +171,7 @@ def format_attendances(attendances, id):
             "status": maping_dictionary(int(attendance.status)),
         }
         formatted_attendances.append(attendance_formatted)
-        if is_three_months_old(attendance.timestamp) or attendance.timestamp > datetime.now():
+        if is_three_months_old(attendance.timestamp) or is_in_the_future(attendance.timestamp):
             BaseError(2003, attendance_formatted, level="warning")
     return formatted_attendances
 
@@ -177,6 +181,8 @@ def manage_individual_attendances(info, attendances):
     date_string = new_time.strftime("%Y-%m-%d")
     file_name = info["ip"]+'_'+date_string+'_file.cro'
     manage_attendance_saving(attendances, folder_path, file_name)
+    program_data_path = create_folder_and_return_path(info["district_name"], info["model_name"] + "-" + info["point"], destination_path=r"C:\\ProgramData\\Gestor Reloj de Asistencias\\devices")
+    manage_attendance_saving(attendances, program_data_path, file_name)
 
 def manage_global_attendances(attendances):
     # Get the value of name_attendances_file from the [Program_config] section
