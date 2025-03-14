@@ -36,6 +36,8 @@ class ConnectionManager():
         self.force_udp = True if communication == 'UDP' else False
         config.read(os.path.join(find_root_directory(), 'config.ini'))
         timeout=int(config['Network_config']['timeout'])
+        if timeout is None:
+            timeout = 15
         self.zk = ZK(ip, port, timeout=timeout, ommit_ping=True, force_udp=self.force_udp)
         self.ip = ip
         self.port = port
