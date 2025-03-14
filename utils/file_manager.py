@@ -50,9 +50,10 @@ def sanitize_folder_name(name):
     sanitized = re.sub(r'-+', '-', sanitized)  # Prevent multiple consecutive '-'
     return sanitized.strip('-')  # Avoid leading or trailing '-'
 
-def create_folder_and_return_path(*args):
-    # Base directory where folders will be stored
-    destination_path = find_root_directory()
+def create_folder_and_return_path(*args, destination_path=None):
+    if destination_path is None:
+        # Base directory where folders will be stored
+        destination_path = find_root_directory()
     
     for folder in args:
         sanitized_folder = sanitize_folder_name(folder.lower())  # Clean the folder name
