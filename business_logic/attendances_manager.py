@@ -181,7 +181,7 @@ def manage_individual_attendances(info, attendances):
     date_string = new_time.strftime("%Y-%m-%d")
     file_name = info["ip"]+'_'+date_string+'_file.cro'
     manage_attendance_saving(attendances, folder_path, file_name)
-    program_data_path = create_folder_and_return_path(info["district_name"], info["model_name"] + "-" + info["point"], destination_path=r"C:\\ProgramData\\Gestor Reloj de Asistencias\\devices")
+    program_data_path = create_folder_and_return_path(info["district_name"], info["model_name"] + "-" + info["point"], destination_path=r"C:\\ProgramData\\Gestor Reloj de Asistencias Backup\\devices")
     manage_attendance_saving(attendances, program_data_path, file_name)
 
 def manage_global_attendances(attendances):
