@@ -29,49 +29,49 @@ locale.setlocale(locale.LC_TIME, "Spanish_Argentina.1252")  # Español de Argent
 def config_log(app_name):
     logs_folder = os.path.join(find_root_directory(), 'logs')
 
-    # Crear la carpeta logs si no existe
-    if not os.path.exists(logs_folder):
-        os.makedirs(logs_folder)
+    # Create the logs folder if it does not exist
+    os.makedirs(logs_folder, exist_ok=True)
 
-    new_time = datetime.today().date()
-    date_string = new_time.strftime("%Y-%b")
+    current_date = datetime.today().date()
+    date_string = current_date.strftime("%Y-%b")
     logs_month_folder = os.path.join(logs_folder, date_string)
 
-    # Crear la carpeta logs_month si no existe
-    if not os.path.exists(logs_month_folder):
-        os.makedirs(logs_month_folder)
+    # Create the monthly logs folder if it does not exist
+    os.makedirs(logs_month_folder, exist_ok=True)
 
-    # icon_for_service_debug
+    # ======= Root Logs ======= #
     debug_log_file = os.path.join(logs_month_folder, app_name + '_debug.log')
-
-    # Configurar el sistema de registros básico para program_debug.log
-    logging.basicConfig(
-        filename=debug_log_file,
-        level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s - %(threadName)s - %(message)s'
-    )
-
-    # Configurar un controlador adicional para 'program_error.log'
     error_log_file = os.path.join(logs_month_folder, app_name + '_error.log')
-    error_logger = logging.FileHandler(error_log_file)
-    error_logger.setLevel(logging.WARNING)
 
-    # Definir un formato para el controlador adicional
-    error_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    error_logger.setFormatter(error_formatter)
+    debug_handler = logging.FileHandler(debug_log_file)
+    debug_handler.setLevel(logging.DEBUG)
+    debug_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(threadName)s - %(message)s'))
 
-    # Agregar el controlador adicional al sistema de registros
-    logging.getLogger().addHandler(error_logger)
+    error_handler = logging.FileHandler(error_log_file)
+    error_handler.setLevel(logging.WARNING)
+    error_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 
-# Ejemplos de registros
-# logging.debug('Este es un mensaje de depuración')
-# logging.info('Este es un mensaje informativo')
-# logging.warning('Este es un mensaje de advertencia')
-# logging.error('Este es un mensaje de error')
-# logging.critical('Este es un mensaje crítico')
-'''
-Los niveles son jerarquicos. Si se establece en debug, 
-se podran ver los mensajes de debug hasta critical. 
-Si se establece en critical, se podran ver solamente 
-los mensajes critical
-'''
+    # ======= Copy logs to ProgramData ======= #
+    program_data_path = os.path.join(r"C:\\ProgramData\\Gestor Reloj de Asistencias\\logs", date_string)
+
+    try:
+        os.makedirs(program_data_path, exist_ok=True)
+
+        debug_log_file_pd = os.path.join(program_data_path, app_name + '_debug.log')
+
+        debug_handler_pd = logging.FileHandler(debug_log_file_pd)
+        debug_handler_pd.setLevel(logging.DEBUG)
+        debug_handler_pd.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(threadName)s - %(message)s'))
+
+        # Get logger and remove duplicate handlers if they exist
+        logger = logging.getLogger()
+        logger.handlers.clear()  # 🔥 This prevents duplicate logs
+        logger.setLevel(logging.DEBUG)
+        
+        # Add both handlers
+        logger.addHandler(debug_handler)
+        logger.addHandler(error_handler)
+        logger.addHandler(debug_handler_pd)
+
+    except PermissionError:
+        logging.warning("Could not write to ProgramData.")
