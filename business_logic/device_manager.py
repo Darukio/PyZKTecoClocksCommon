@@ -18,6 +18,7 @@
 """
 
 import logging
+import random
 import eventlet
 import os
 import configparser
@@ -42,6 +43,10 @@ def get_device_info():
     file_path = os.path.join(find_root_directory(), 'info_devices.txt')
     return [device for data in load_from_file(file_path) if (device := organize_device_info(data))]
 
+def exponential_backoff(attempt):
+    wait_time = min(2 ** attempt + random.uniform(0, 3), 30)
+    time.sleep(wait_time)
+    
 def network_operation_with_retry(op, ip, port, communication, max_attempts=3, from_service=False):
     config.read(os.path.join(find_root_directory(), 'config.ini'))
     max_attempts = int(config['Network_config']['retry_connection'])
@@ -87,6 +92,7 @@ def network_operation_with_retry(op, ip, port, communication, max_attempts=3, fr
                 raise ConnectionFailedError(error_message) from e
             else:
                 ConnectionFailedError(error_message)
+            exponential_backoff(_)
         except Exception as e:
             logging.error(str(e))
             pass
