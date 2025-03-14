@@ -21,6 +21,7 @@ import json
 import logging
 import os
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import Qt
 from .file_manager import find_marker_directory
 
 # Load errors from JSON
@@ -29,31 +30,48 @@ with open(os.path.join(find_marker_directory("json"), "json", "errors.json"), en
 
 class BaseError(Exception):
     """Base class for errors with logging support."""
-
     def __init__(self, error_code, extra_info="", level="error"):
         self.code = error_code
-        self.message = ERRORS.get(str(error_code), 0000)
-        
-        if extra_info:
-            self.message += f" ({extra_info})"
+        self.base_message = ERRORS.get(str(error_code), "Error desconocido")
+        self.extra_info = extra_info
+        self.message = self._format_message()
+        self._log(level)
+        super().__init__(self.message)
 
-        log = f"[{self.code}] {self.message}"
-        # Determine logging level
+    def _format_message(self):
+        """Formats the error message."""
+        if self.extra_info:
+            return f"{self.base_message}\n{self.extra_info}"
+        return self.base_message
+
+    def _log(self, level):
+        """Logs the error based on the specified level."""
+        log_message = f"[{self.code}] {self.message}"
         if level == "warning":
-            logging.warning(log)
-        elif level == "error":
-            logging.error(log)
+            logging.warning(log_message)
         elif level == "critical":
-            logging.critical(log)
+            logging.critical(log_message)
+        else:
+            logging.error(log_message)
 
-        super().__init__(log)
+    def show_message_box(self, parent=None):
+        """Displays the error in a QMessageBox if a graphical interface is available."""
+        QMessageBox.critical(parent, f"Error {self.code}", self.message)
+
+    def show_message_box_html(self, parent=None):
+        """Displays the error in a QMessageBox with HTML support."""
+        msg_box = QMessageBox(parent)
+        msg_box.setWindowTitle(f"Error {self.code}")
+        msg_box.setTextFormat(Qt.RichText)
+        msg_box.setText(self.message)
+        msg_box.exec_()
 
 class BaseErrorWithMessageBox(BaseError):
     """Base class for errors with logging and message box support."""
 
     def __init__(self, error_code, extra_info="", level="error", parent=None):
         super().__init__(error_code, extra_info, level)
-        QMessageBox.critical(parent, f"Error {self.code}", self.message)
+        self.show_message_box(parent)
 
 # Error and warning classes
 class ConnectionFailedError(BaseError):
