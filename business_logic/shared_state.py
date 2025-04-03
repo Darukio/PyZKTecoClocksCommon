@@ -18,9 +18,26 @@
 """
 
 import threading
-from eventlet.green import threading
 
 class SharedState:
+    """
+    A class to manage shared state for device processing.
+    Attributes:
+        total_devices (int): The total number of devices to be processed.
+        processed_devices (int): The number of devices that have been processed.
+        lock (threading.Lock): A lock to ensure thread-safe operations on shared state.
+    Methods:
+        increment_processed_devices():
+            Increments the count of processed devices in a thread-safe manner.
+            Returns the updated count of processed devices.
+        calculate_progress():
+            Calculates the progress of device processing as a percentage.
+            Returns the progress percentage as an integer.
+        set_total_devices(total):
+            Sets the total number of devices to be processed in a thread-safe manner.
+        get_total_devices():
+            Returns the total number of devices to be processed.
+    """
     def __init__(self):
         self.total_devices = 0
         self.processed_devices = 0
@@ -43,3 +60,6 @@ class SharedState:
 
     def get_total_devices(self):
         return self.total_devices
+    
+    def reset(self):
+        self.processed_devices = 0
