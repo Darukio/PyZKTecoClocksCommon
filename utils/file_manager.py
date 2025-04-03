@@ -40,8 +40,10 @@ def load_from_file(file_path):
     try:
         with open(file_path, 'r') as file:
             content = [line.strip() for line in file.readlines()] # Remove newlines
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        raise e
     except Exception as e:
-        raise(e)
+        raise e
     return content
 
 def sanitize_folder_name(name):
@@ -65,21 +67,17 @@ def create_folder_and_return_path(*args, destination_path=None):
     
     return destination_path
 
-def save_attendances_to_file(attendances, file):
+from ..business_logic.models.attendance import Attendance
+def save_attendances_to_file(attendances: list[Attendance], file):
     file_lock.acquire()
     try:
         with open(file, 'a') as f:
             for attendance in attendances:
-                '''
-                Dev:
-                print('Attendance: ', attendance)
-                print(dir(attendance))
-                for attr_name, attr_value in vars(attendance).items():
-                    print(f"{attr_name}: {type(attr_value)}")
-                '''
-                f.write(f"{attendance['user_id']} {attendance['timestamp']} {attendance['id']} {attendance['status']}\n")
+                f.write(f"{attendance.user_id} {attendance.timestamp} {attendance.id} {attendance.status}\n")
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        raise e
     except Exception as e:
-        logging.error(f'Process terminate: {e}')
+        raise e
     finally:
         file_lock.release()
 
@@ -104,5 +102,5 @@ def find_root_directory():
 def file_exists_in_folder(file_name, folder):
     from pathlib import Path
     # Create a Path object for the folder and file
-    full_path = Path(folder) / file_name
+    full_path: Path = Path(folder) / file_name
     return full_path.is_file()
