@@ -18,7 +18,6 @@
 """
 
 import os
-import shutil
 import winreg
 import logging
 from .file_manager import find_root_directory
@@ -26,7 +25,7 @@ from .file_manager import find_root_directory
 def add_to_startup(app_name):
     # Path to the executable you want to start automatically
     executable_path = os.path.join(find_root_directory(), app_name + ".exe")
-    logging.debug(f'executable_path: {executable_path}')
+    #logging.debug(f'executable_path: {executable_path}')
 
     # Open the registry key where startup programs are stored
     key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Run', 0, winreg.KEY_ALL_ACCESS)
@@ -41,7 +40,7 @@ def remove_from_startup(app_name):
     # Try to open the registry key where startup programs are stored
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Run', 0, winreg.KEY_ALL_ACCESS)
-        logging.debug(f'key: {key}')
+        #logging.debug(f'key: {key}')
     except FileNotFoundError as e:
         logging.error(e)
         # If the key does not exist, exit the function
