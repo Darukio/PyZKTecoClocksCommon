@@ -25,6 +25,20 @@ import sys
 import os
 import psutil
 
+def dump_all_thread_traces():
+    import sys
+    import threading
+    import traceback
+    import logging
+    # Obtiene los frames de todos los hilos activos
+    frames = sys._current_frames()
+    for thread in threading.enumerate():
+        logging.debug(f"Thread {thread.name} (ID: {thread.ident}): {thread.is_alive()}")
+        frame = frames.get(thread.ident)
+        if frame:
+            traceback.print_stack(frame)
+        logging.debug("-" * 50)
+
 def get_parent_process(pid):
     """
     Get the parent process of a given process.
@@ -39,7 +53,7 @@ def get_parent_process(pid):
         process = psutil.Process(pid)
         return process.parent()
     except psutil.NoSuchProcess:
-        logging.debug(f"No existen procesos con el pid {pid}.")
+        logging.error(f"No existen procesos con el pid {pid}")
         return None
     except Exception as e:
         BaseError(0000, str(e))
@@ -58,7 +72,7 @@ def get_child_processes(pid):
         process = psutil.Process(pid)
         return process.children()
     except psutil.NoSuchProcess:
-        logging.debug(f"No existen procesos con el pid {pid}.")
+        logging.error(f"No existen procesos con el pid {pid}")
         return []
     except Exception as e:
         BaseError(0000, str(e))
@@ -70,7 +84,7 @@ def is_user_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
     except Exception as e:
-        logging.debug(f"Error obteniendo los privilegios: {e}")
+        logging.error(f"Error obteniendo los privilegios: {str(e)}")
         return False
     except Exception as e:
         BaseError(0000, str(e))
@@ -84,7 +98,7 @@ def run_as_admin():
         script = sys.argv[0]
         params = " ".join(sys.argv[1:])
 
-        logging.debug("script: "+script + " " + params)
+        #logging.debug("script: "+script + " " + params)
 
         # Run the script with elevated permissions
         if script.endswith(".exe"):  # If it's an .exe file
