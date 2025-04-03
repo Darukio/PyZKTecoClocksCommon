@@ -17,116 +17,54 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import logging
-import eventlet
-import os
-import configparser
-
-from ..utils.file_manager import find_root_directory
-
-config = configparser.ConfigParser()
+import threading
+from .operation_manager import OperationManager
+from .models.device import Device
 from .shared_state import SharedState
-from ..utils.errors import BatteryFailingError, ConnectionFailedError, NetworkError, OutdatedTimeError
-from .device_manager import get_device_info, network_operation_with_retry
+from ..utils.errors import BaseError
+import logging
+import configparser
+config = configparser.ConfigParser()
 
-def update_devices_time(selected_devices=None, from_service=False, emit_progress=None):
-    device_info = []
-    try:
-        # Get all devices in a formatted list
-        device_info = get_device_info()
-    except Exception as e:
-        logging.error(e)
+class HourManagerBase(OperationManager):
+    def __init__(self, state: SharedState):
+        self.devices_errors: dict[str, dict[str, bool]] = {}
+        super().__init__(state=state)
 
-    if device_info:
-        gt = []
-        active_devices = []
-        config.read(os.path.join(find_root_directory(), 'config.ini'))
-        coroutines_pool_max_size = int(config['Cpu_config']['coroutines_pool_max_size'])
+    def update_devices_time(self, selected_ips: list[str]):
+        self.devices_errors.clear()
+        super().manage_threads_to_devices(selected_ips=selected_ips, function=self.update_device_time_of_one_device)
 
-        # Create a pool of green threads
-        state = SharedState()
-        pool = eventlet.GreenPool(coroutines_pool_max_size)
-        
-        if selected_devices:
-            selected_ips = {device['ip'] for device in selected_devices}
-
-            active_devices = [device for device in device_info if device['ip'] in selected_ips]
-        elif from_service:
-            active_devices = device_info
-
-        # Set the total number of devices in the shared state
-        state.set_total_devices(len(active_devices))
-        
-        for active_device in active_devices:
+        if len(self.devices_errors) > 0:
             try:
-                gt.append(pool.spawn(update_device_time_single, active_device, from_service, emit_progress, state))
+                for ip, errors in self.devices_errors.items():
+                    if errors["battery failing"]:
+                        self.update_battery_status(ip)
             except Exception as e:
-                pass
-            
-        device_with_battery_failing = []
-        device_error = {}
-        for active_device, g in zip(active_devices, gt):
-            logging.debug(f'Processing {active_device}')
-            device_error[active_device['ip']] = { "connection failed": False, "battery failing": False }
-            try:
-                g.wait()
-            except BatteryFailingError as e:
-                logging.error(f"Error al actualizar la hora del dispositivo {e.ip}: {e} - {e.__cause__}")
-                device_with_battery_failing.append(e.ip)
-                device_error[active_device['ip']]["battery failing"] = True
-            except NetworkError as e:
-                device_error[active_device['ip']]["connection failed"] = True
-            except Exception as e:
-                logging.error(e, e.__cause__)
+                BaseError(3000, str(e), level="warning")
 
-        logging.debug("Cantidad de dispositivos con fallos de pila: "+str(len(device_with_battery_failing)))
-        if len(device_with_battery_failing) > 0:
-            logging.debug("Dispositivos con fallos de pila: "+str(device_with_battery_failing))
-            for ip in device_with_battery_failing:
-                try:
-                    update_battery_status(ip)
-                except Exception as e:
-                    logging.error(f"Error al actualizar el estado de bateria del dispositivo {e.ip}: {e}")
+        return self.devices_errors
+        
+    def update_device_time_of_one_device(self, device: Device):
+        raise NotImplementedError("Las subclases deberian implementar este error")
 
-        logging.debug('TERMINE HORA!')
-        return device_error
-
-def update_device_time_single(info, from_service=False, emit_progress=None, state=None):
-    try:
-        network_operation_with_retry("update_time", ip=info['ip'], port=4370, communication=info['communication'], from_service=from_service)
-    except ConnectionFailedError as e:
-        raise NetworkError(info['model_name'], info['point'], info['ip'])
-    except OutdatedTimeError as e:
-        raise BatteryFailingError(info["model_name"], info["point"], info["ip"])
-    except Exception as e:
-        raise e
-    finally:
+    def update_battery_status(self, p_ip: str):
         try:
-            if state:
-                # Update the number of processed devices and progress
-                processed_devices = state.increment_processed_devices()
-                if emit_progress:
-                    progress = state.calculate_progress()
-                    emit_progress(percent_progress=progress, device_progress=info["ip"], processed_devices=processed_devices, total_devices=state.get_total_devices())
-                    logging.debug(f"processed_devices: {processed_devices}/{state.get_total_devices()}, progress: {progress}%")
+            with open('info_devices.txt', 'r') as file:
+                lines: list[str] = file.readlines()
+
+            new_lines: list[str] = []
+            for line in lines:
+                parts: list[str] = line.strip().split(' - ')
+                ip: str = parts[3]
+                if ip == p_ip:
+                    parts[6] = "False"
+                new_lines.append(' - '.join(parts) + '\n')
+
+            with threading.Lock():
+                with open('info_devices.txt', 'w') as file:
+                    file.writelines(new_lines)
+
+            logging.info("Estado de pila actualizado correctamente en {}".format(p_ip))
         except Exception as e:
-            logging.error(e)
-
-    return
-
-def update_battery_status(p_ip):
-    with open('info_devices.txt', 'r') as file:
-        lines = file.readlines()
-
-    new_lines = []
-    for line in lines:
-        parts = line.strip().split(' - ')
-        ip = parts[3]
-        if ip == p_ip:
-            parts[6] = "False"
-        new_lines.append(' - '.join(parts) + '\n')
-
-    with open('info_devices.txt', 'w') as file:
-        file.writelines(new_lines)
-
-    logging.debug("Estado de bateria actualizado correctamente.")
+            BaseError(3001, str(e))
