@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import threading
+import eventlet
 from .operation_manager import OperationManager
 from .models.device import Device
 from .shared_state import SharedState
@@ -25,20 +25,47 @@ from ..utils.errors import BaseError
 import logging
 import configparser
 config = configparser.ConfigParser()
+lock = eventlet.semaphore.Semaphore()
 
 class HourManagerBase(OperationManager):
     def __init__(self, state: SharedState):
+        """
+        Initializes the HourManager instance.
+
+        Args:
+            state (SharedState): The shared state object used to manage the state across the application.
+
+        Attributes:
+            devices_errors (dict[str, dict[str, bool]]): A dictionary to track errors for devices. 
+                The outer dictionary uses device identifiers as keys, and the inner dictionary 
+                maps error types (as strings) to their boolean status.
+        """
         self.devices_errors: dict[str, dict[str, bool]] = {}
         super().__init__(state=state)
 
     def update_devices_time(self, selected_ips: list[str]):
+        """
+        Updates the time on the specified devices and handles any errors encountered.
+        This method clears the existing device errors, manages threads to update the time
+        on the specified devices, and processes any errors that occur during the update.
+        Args:
+            selected_ips (list[str]): A list of IP addresses of the devices to update.
+        Returns:
+            dict: A dictionary containing any errors encountered during the update process,
+                  where the keys are device IPs and the values are dictionaries of error details.
+        Error Handling:
+            - If a device reports a "battery failing" error, the battery status for that device
+              is updated.
+            - Any exceptions raised during error handling are logged as warnings with a custom
+              error code (3000).
+        """
         self.devices_errors.clear()
         super().manage_threads_to_devices(selected_ips=selected_ips, function=self.update_device_time_of_one_device)
 
         if len(self.devices_errors) > 0:
             try:
                 for ip, errors in self.devices_errors.items():
-                    if errors["battery failing"]:
+                    if errors.get("battery failing"):
                         self.update_battery_status(ip)
             except Exception as e:
                 BaseError(3000, str(e), level="warning")
@@ -49,6 +76,16 @@ class HourManagerBase(OperationManager):
         raise NotImplementedError("Las subclases deberian implementar este error")
 
     def update_battery_status(self, p_ip: str):
+        """
+        Updates the battery status of a device in the 'info_devices.txt' file based on its IP address.
+        This method reads the 'info_devices.txt' file, searches for the line corresponding to the given IP address,
+        and updates the battery status to "False". The updated content is then written back to the file.
+        Args:
+            p_ip (str): The IP address of the device whose battery status needs to be updated.
+        Raises:
+            BaseError: If an exception occurs during the file operation, it raises a BaseError with code 3001
+                       and the exception message.
+        """
         try:
             with open('info_devices.txt', 'r') as file:
                 lines: list[str] = file.readlines()
@@ -61,7 +98,7 @@ class HourManagerBase(OperationManager):
                     parts[6] = "False"
                 new_lines.append(' - '.join(parts) + '\n')
 
-            with threading.Lock():
+            with lock:
                 with open('info_devices.txt', 'w') as file:
                     file.writelines(new_lines)
 

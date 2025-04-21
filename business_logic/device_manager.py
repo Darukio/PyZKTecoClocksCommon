@@ -26,7 +26,17 @@ from .models.device import Device
 from ..utils.errors import BaseError
 
 def organize_devices_info(line: str):
-    """Parses a line of text and returns a Device instance."""
+    """
+    Parses a line of text containing device information and organizes it into a Device object.
+
+    Args:
+        line (str): A string containing device information in the format:
+                    "district_name - model_name - point - ip - id - communication - battery_failing - active".
+
+    Returns:
+        Device: An instance of the Device class populated with the parsed information, or
+        None if the input line does not conform to the expected format.
+    """
     parts: list[str] = line.strip().split(" - ")
     if len(parts) != 8:
         return None  # Invalid format, return None
@@ -42,7 +52,21 @@ def organize_devices_info(line: str):
     )
 
 def get_devices_info():
-    """Loads devices information from a file and returns a list of Device instances."""
+    """
+    Retrieves information about devices from a specified file.
+
+    This function reads device data from a file named 'info_devices.txt' located
+    in the root directory of the project. It processes the data to organize
+    device information and returns a list of devices.
+
+    Returns:
+        list[str]: A list of organized device information.
+
+    Raises:
+        BaseError: If an error occurs during file loading or data processing,
+                   a BaseError with code 3001 is raised, including the error
+                   message and a critical severity level.
+    """
     file_path: str = os.path.join(find_root_directory(), 'info_devices.txt')
     devices: list[str] = []
     try:
@@ -52,6 +76,17 @@ def get_devices_info():
     return devices
 
 def activate_all_devices():
+    """
+    Activates all devices by updating their status in the 'info_devices.txt' file.
+    This function reads the 'info_devices.txt' file, updates the status of each device
+    to "True", and writes the updated information back to the file. Each line in the file
+    is expected to have device information separated by ' - ', with the status being the
+    8th element (index 7) in the split parts.
+    If an error occurs during the process, it raises a BaseError with an error code and
+    the exception message.
+    Raises:
+        BaseError: If an exception occurs during file operations or processing.
+    """
     try:
         with open('info_devices.txt', 'r') as file:
             lines: list[str] = file.readlines()

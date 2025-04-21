@@ -21,33 +21,28 @@ from datetime import datetime
 import os
 from dateutil.relativedelta import relativedelta
 import configparser
+config = configparser.ConfigParser()
+from ...utils.file_manager import find_root_directory
+config.read(os.path.join(find_root_directory(), 'config.ini'))
 
 def load_attendance_status_config():
     """
-    Loads the attendance status configuration from a 'config.ini' file and 
-    populates the global dictionary `attendance_status_dictionary` with the 
-    status mappings.
+    Loads the attendance status configuration into a global dictionary.
 
-    The configuration file is expected to have an 'Attendance_status' section 
-    with the following keys:
-    - 'status_fingerprint'
-    - 'status_face'
-    - 'status_card'
+    This function initializes the `attendance_status_dictionary` global variable
+    with mappings of status codes to their corresponding configuration values
+    from the `config` dictionary. The status codes represent different methods
+    of attendance (e.g., fingerprint, face, card).
 
-    The dictionary `attendance_status_dictionary` will map specific status 
-    codes to their corresponding configuration values:
-    - 1: Fingerprint status
-    - 15: Face status
-    - 0, 2, 4: Card status
+    Global Variables:
+        attendance_status_dictionary (dict): A dictionary mapping status codes
+            to their respective attendance status configuration values.
 
     Raises:
-        Exception: If there is an error reading the configuration file or 
-        accessing the required keys.
+        Exception: Propagates any exception that occurs during the loading
+            of the configuration.
     """
     try:
-        config = configparser.ConfigParser()
-        from ...utils.file_manager import find_root_directory
-        config.read(os.path.join(find_root_directory(), 'config.ini'))
         global attendance_status_dictionary
         attendance_status_dictionary = {
             1: config['Attendance_status']['status_fingerprint'],
@@ -58,62 +53,38 @@ def load_attendance_status_config():
         }
     except Exception as e:
         raise e
+    
+load_attendance_status_config()
 
 class Attendance():
-    """
-    A class to represent an attendance record.
-    Attributes:
-    -----------
-    user_id : int
-        The ID of the user.
-    timestamp : str
-        The timestamp of the attendance in the format "%d/%m/%Y %H:%M".
-    timestamp_str : datetime
-        The preformatted timestamp as a datetime object.
-    id : int
-        The ID of the attendance record.
-    status : int
-        The status of the attendance.
-    Methods:
-    --------
-    set_id(id: int):
-        Sets the ID of the attendance record.
-    __str__():
-        Returns a string representation of the attendance record.
-    __repr__():
-        Returns a string representation of the attendance record.
-    format_attendance():
-        Formats the attendance record by zero-padding the user ID and mapping the status using a dictionary.
-    mapping_dictionary(number):
-        Applies the transformation according to the dictionary.
-    is_three_months_old():
-        Checks if the attendance record is older than three months.
-    is_in_the_future():
-        Checks if the attendance record is in the future.
-    """
-    def __init__(self, user_id: int = None, timestamp: str | datetime = None, id: int = None, status: int = None):
+    def __init__(self, user_id = None, timestamp = None, id = None, status = None):
         """
-        Initialize an Attendance object.
+        Initializes an instance of the attendance model.
 
         Args:
-            user_id (int, optional): The ID of the user. Defaults to None.
-            timestamp (str, optional): The timestamp of the attendance in the format "%d/%m/%Y %H:%M". Defaults to None.
-            id (int, optional): The ID of the attendance record. Defaults to None.
-            status (int, optional): The status of the attendance. Defaults to None.
+            user_id (Optional[Any]): The unique identifier for the user. Defaults to None.
+            timestamp (Optional[datetime]): The timestamp of the attendance record. Defaults to None.
+            id (Optional[Any]): The unique identifier for the attendance record. Defaults to None.
+            status (Optional[Any]): The status of the attendance record. Defaults to None.
+
+        Attributes:
+            user_id (Any): The unique identifier for the user.
+            timestamp (datetime): The timestamp of the attendance record.
+            timestamp_str (str): The formatted string representation of the timestamp.
+            id (Any): The unique identifier for the attendance record.
+            status (Any): The status of the attendance record.
+
+        Raises:
+            Exception: Logs an error if an exception occurs during initialization.
         """
+        import logging
         try:
-            load_attendance_status_config()
-            self.user_id: int = user_id
-            if isinstance(timestamp, datetime):
-                self.timestamp_str = timestamp
-                self.timestamp: str = timestamp.strftime("%d/%m/%Y %H:%M")
-            else:
-                self.timestamp: str = timestamp
-                self.timestamp_str: datetime = datetime.strptime(timestamp, "%d/%m/%Y %H:%M") if timestamp else None
-            self.id: int = id
-            self.status: int = status
+            self.user_id = user_id
+            self.timestamp = timestamp
+            self.timestamp_str: str = timestamp.strftime("%d/%m/%Y %H:%M")
+            self.id = id
+            self.status = status
         except Exception as e:
-            import logging
             logging.error(e)
 
     def set_id(self, id: int):
@@ -196,7 +167,7 @@ class Attendance():
         """
         now = datetime.now()
         three_months_ago = now - relativedelta(months=3)
-        return self.timestamp_str and self.timestamp_str <= three_months_ago
+        return self.timestamp and self.timestamp <= three_months_ago
 
     def is_in_the_future(self):
         """
@@ -206,4 +177,4 @@ class Attendance():
             bool: True if the timestamp is in the future, False otherwise.
         """
         now = datetime.now()
-        return self.timestamp_str and self.timestamp_str > now
+        return self.timestamp and self.timestamp > now

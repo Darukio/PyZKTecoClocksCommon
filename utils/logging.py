@@ -20,13 +20,30 @@
 from datetime import datetime
 import os
 import logging
-import sys
 from .file_manager import *
 import locale
 
 locale.setlocale(locale.LC_TIME, "Spanish_Argentina.1252")  # Español de Argentina
 
 def config_log(app_name):
+    """
+    Configures logging for the application.
+    This function sets up logging to write debug and error logs to a specific folder structure.
+    It creates a "logs" folder in the root directory of the project and organizes logs by month.
+    Additionally, it attempts to copy the debug logs to a folder in "C:\\ProgramData" for centralized access.
+    Args:
+        app_name (str): The name of the application, used to name the log files.
+    Behavior:
+        - Creates a "logs" folder in the root directory of the project.
+        - Creates a subfolder for the current month in the format "YYYY-MMM".
+        - Writes debug logs to a file named "<app_name>_debug.log".
+        - Writes error logs to a file named "<app_name>_error.log".
+        - Attempts to copy the debug log to "C:\\ProgramData\\Gestor Reloj de Asistencias\\logs".
+        - Configures the root logger to use the created handlers.
+        - Removes duplicate handlers from the logger to prevent duplicate log entries.
+    Raises:
+        PermissionError: If the function cannot write to "C:\\ProgramData", a warning is logged instead.
+    """
     logs_folder = os.path.join(find_root_directory(), 'logs')
 
     # Create the logs folder if it does not exist

@@ -26,11 +26,41 @@ import os
 import psutil
 
 def dump_all_thread_traces():
+    """
+    Dumps the stack traces of all active threads for debugging purposes.
+
+    This function retrieves the current stack frames of all active threads
+    and logs their details, including thread name, ID, and whether the thread
+    is alive. It also prints the stack trace of each thread to help diagnose
+    issues such as deadlocks or unexpected behavior in multithreaded applications.
+
+    Note:
+        This function uses `sys._current_frames()`, which is considered a private
+        API and may not be available or behave consistently across Python versions.
+
+    Logging:
+        - Logs the thread name, ID, and alive status using the `logging` module.
+        - Logs a separator line ("-" * 50) after each thread's stack trace.
+
+    Dependencies:
+        - `sys`: Used to retrieve the current frames of all threads.
+        - `threading`: Used to enumerate all active threads.
+        - `traceback`: Used to print the stack trace of each thread.
+        - `logging`: Used for logging thread details and separators.
+
+    Example:
+        Call this function when debugging a multithreaded application to inspect
+        the state of all threads:
+        
+        ```
+        dump_all_thread_traces()
+        ```
+    """
     import sys
     import threading
     import traceback
     import logging
-    # Obtiene los frames de todos los hilos activos
+
     frames = sys._current_frames()
     for thread in threading.enumerate():
         logging.debug(f"Thread {thread.name} (ID: {thread.ident}): {thread.is_alive()}")
@@ -41,13 +71,21 @@ def dump_all_thread_traces():
 
 def get_parent_process(pid):
     """
-    Get the parent process of a given process.
+    Retrieves the parent process of a given process ID (PID).
 
     Args:
-        pid (int): PID of the process.
+        pid (int): The process ID of the target process.
 
     Returns:
-        psutil.Process: Parent process object or None if it doesn't exist.
+        psutil.Process or None: The parent process object if found, 
+        or None if the process does not exist or an error occurs.
+
+    Logs:
+        Logs an error message if the process with the given PID does not exist.
+
+    Raises:
+        BaseError: If an unexpected exception occurs, it raises a BaseError 
+        with an error code and the exception message.
     """
     try:
         process = psutil.Process(pid)
@@ -60,13 +98,22 @@ def get_parent_process(pid):
     
 def get_child_processes(pid):
     """
-    Get a list of child processes of a given process.
+    Retrieves the child processes of a given process ID (PID).
 
     Args:
-        pid (int): PID of the process.
+        pid (int): The process ID of the parent process.
 
     Returns:
-        list: List of psutil.Process objects representing the children.
+        list: A list of `psutil.Process` objects representing the child processes.
+              Returns an empty list if no child processes are found or if the parent
+              process does not exist.
+
+    Raises:
+        psutil.NoSuchProcess: If the process with the given PID does not exist.
+        Exception: For any other unexpected errors, logs the error and raises a BaseError.
+
+    Note:
+        This function uses the `psutil` library to interact with system processes.
     """
     try:
         process = psutil.Process(pid)
@@ -79,7 +126,16 @@ def get_child_processes(pid):
 
 def is_user_admin():
     """
-    Check if the process has administrator privileges.
+    Checks if the current user has administrative privileges.
+
+    Returns:
+        bool: True if the user has administrative privileges, False otherwise.
+
+    Logs:
+        Logs an error message if an exception occurs while checking privileges.
+
+    Exceptions:
+        Handles any exceptions that occur during the privilege check and logs the error.
     """
     try:
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
@@ -91,7 +147,25 @@ def is_user_admin():
 
 def run_as_admin():
     """
-    Relaunch the script with administrator privileges if necessary.
+    Ensures the script is running with administrator privileges. If the current user is not an 
+    administrator, the script restarts itself with elevated permissions.
+    Behavior:
+    - If the script is an executable (.exe), it uses the Windows ShellExecuteW API to relaunch 
+      the script with administrator privileges.
+    - If the script is a Python file, it uses PowerShell to relaunch the script with elevated 
+      permissions using the `pythonw` interpreter.
+    Steps:
+    1. Checks if the current user has administrator privileges using the `is_user_admin` function.
+    2. If not an administrator:
+       - Constructs the command to relaunch the script with its current arguments.
+       - Restarts the script with elevated privileges.
+       - Terminates the original process.
+    Note:
+    - This function is specific to Windows environments.
+    - The `is_user_admin` function must be implemented elsewhere in the codebase.
+    - The `sys` and `ctypes` modules are used for handling script execution and privilege elevation.
+    Raises:
+        SystemExit: Terminates the original process after relaunching with elevated privileges.
     """
     if not is_user_admin():
         # The script is not running as administrator, so we restart it with elevated privileges
@@ -109,6 +183,24 @@ def run_as_admin():
         sys.exit(0)  # Terminate the original process
 
 def verify_duplicated_instance(script_name):
+    """
+    Checks if there is another instance of the given script already running.
+    Args:
+        script_name (str): The full path or name of the script to check for duplicate instances.
+    Returns:
+        bool: True if a duplicate instance of the script is found, False otherwise.
+    This function iterates over all active processes and checks if the given script is already
+    running. It considers the following:
+    - The process name should match 'python.exe' or 'pythonw.exe' (for Python scripts).
+    - The script name should appear in the command line arguments of the process.
+    - The process should not be the current process, its parent process, or any of its child processes.
+    If a duplicate instance is found, it logs the command line of the duplicate process and returns True.
+    Otherwise, it returns False.
+    Exceptions:
+        - Handles `psutil.NoSuchProcess`, `psutil.AccessDenied`, and `psutil.ZombieProcess` exceptions
+          gracefully by ignoring them.
+        - Logs any other unexpected exceptions using a custom `BaseError` handler.
+    """
     # Get the script name without the full path
     script_basename = os.path.basename(script_name)
     
@@ -141,5 +233,20 @@ def verify_duplicated_instance(script_name):
     return False
 
 def exit_duplicated_instance():
+    """
+    Terminates the script if a duplicate instance is detected.
+
+    This function logs a message indicating that a duplicate instance
+    of the script is being closed and then exits the program with a
+    status code of 0.
+
+    Usage:
+        Call this function when you need to ensure that only one instance
+        of the script is running at a time.
+
+    Note:
+        Ensure proper logging configuration is set up before calling this
+        function to capture the log message.
+    """
     logging.info("Cerrando instancia duplicada...")
     sys.exit(0)  # Exit the script if a duplicate is found

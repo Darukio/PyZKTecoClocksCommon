@@ -20,6 +20,17 @@
 from typing import TypedDict, Optional
 
 class DeviceInfo(TypedDict):
+    """
+    DeviceInfo is a TypedDict that represents information about a device.
+
+    Attributes:
+        platform (Optional[str]): The platform or operating system of the device.
+        device_name (Optional[str]): The name of the device.
+        firmware_version (Optional[str]): The current firmware version of the device.
+        serial_number (Optional[str]): The serial number of the device.
+        old_firmware (Optional[str]): The previous firmware version of the device, if applicable.
+        attendance_count (Optional[int]): The number of attendance records stored on the device.
+    """
     platform: Optional[str]
     device_name: Optional[str]
     firmware_version: Optional[str]
@@ -28,5 +39,14 @@ class DeviceInfo(TypedDict):
     attendance_count: Optional[int]
 
 class ConnectionInfo(TypedDict):
+    """
+    ConnectionInfo is a TypedDict that represents the connection details for a device.
+
+    Attributes:
+        connection_failed (Optional[bool]): Indicates whether the connection attempt failed. 
+            True if the connection failed, False otherwise, or None if the status is unknown.
+        device_info (Optional[DeviceInfo]): Contains information about the connected device, 
+            or None if no device information is available.
+    """
     connection_failed: Optional[bool]
     device_info: Optional[DeviceInfo]
