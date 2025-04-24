@@ -17,7 +17,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import eventlet
+
+from ..utils.file_manager import find_root_directory
 from .operation_manager import OperationManager
 from .models.device import Device
 from .shared_state import SharedState
@@ -83,11 +86,11 @@ class HourManagerBase(OperationManager):
         Args:
             p_ip (str): The IP address of the device whose battery status needs to be updated.
         Raises:
-            BaseError: If an exception occurs during the file operation, it raises a BaseError with code 3001
-                       and the exception message.
+            BaseError: If an exception occurs during the process, a BaseError with code 3001 is raised,
+                       containing the error message.
         """
         try:
-            with open('info_devices.txt', 'r') as file:
+            with open(os.path.join(find_root_directory(), 'info_devices.txt'), 'r') as file:
                 lines: list[str] = file.readlines()
 
             new_lines: list[str] = []
@@ -99,7 +102,7 @@ class HourManagerBase(OperationManager):
                 new_lines.append(' - '.join(parts) + '\n')
 
             with lock:
-                with open('info_devices.txt', 'w') as file:
+                with open(os.path.join(find_root_directory(), 'info_devices.txt'), 'w') as file:
                     file.writelines(new_lines)
 
             logging.info("Estado de pila actualizado correctamente en {}".format(p_ip))

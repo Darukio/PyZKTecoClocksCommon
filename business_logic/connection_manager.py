@@ -526,17 +526,27 @@ class ConnectionManager():
         
     def update_device_name(self):
         """
-        Updates the name of the device associated with the current connection.
+        Updates the device name associated with the current connection.
         This method attempts to retrieve the device name from the connected device.
         If the device name cannot be retrieved or is invalid, it falls back to using
         the device's serial number. If the serial number matches a specific value,
-        a predefined name is assigned. The updated device name is then stored in a
-        local file, replacing the old name if necessary.
+        it assigns a predefined name. The updated device name is then stored in a
+        shared file (`info_devices.txt`), replacing the old name if necessary.
         Raises:
-            BaseError: If the device name or serial number cannot be retrieved, or if
-                       there is an error updating the local file.
+            BaseError: If the device name or serial number cannot be retrieved, or
+                       if there is an error updating the shared file.
         Returns:
             str: The updated device name.
+        Exceptions:
+            - NetworkError: Raised internally when network operations fail.
+            - BaseError: Raised when there are issues with retrieving or updating
+              the device name.
+        Notes:
+            - The method ensures that the device name contains only alphanumeric
+              characters, spaces, slashes, or hyphens.
+            - The method uses a lock to ensure thread-safe access to the shared file.
+        Logging:
+            - Logs a message when replacing the device name in the shared file.
         """
         try:
             device_name: str = self.__network_operation_wrapper(self.conn.get_device_name)
@@ -557,7 +567,7 @@ class ConnectionManager():
             device_name = device_name.replace(" ", "")
         
         try:
-            with open('info_devices.txt', 'r') as file:
+            with open(os.path.join(find_root_directory(), 'info_devices.txt'), 'r') as file:
                 lines: list[str] = file.readlines()
 
             new_lines: list[str] = []
@@ -573,7 +583,7 @@ class ConnectionManager():
                 new_lines.append(' - '.join(parts) + '\n')
 
             with self.lock:
-                with open('info_devices.txt', 'w') as file:
+                with open(os.path.join(find_root_directory(), 'info_devices.txt'), 'w') as file:
                     file.writelines(new_lines)
         except Exception as e:
             BaseError(3001, f"Error al reemplazar el nombre del dispositivo {self.ip}: {str(e)}", level="warning")

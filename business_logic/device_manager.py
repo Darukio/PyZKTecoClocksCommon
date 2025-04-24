@@ -78,17 +78,17 @@ def get_devices_info():
 def activate_all_devices():
     """
     Activates all devices by updating their status in the 'info_devices.txt' file.
-    This function reads the 'info_devices.txt' file, updates the status of each device
-    to "True", and writes the updated information back to the file. Each line in the file
-    is expected to have device information separated by ' - ', with the status being the
-    8th element (index 7) in the split parts.
-    If an error occurs during the process, it raises a BaseError with an error code and
-    the exception message.
+    This function reads the 'info_devices.txt' file, modifies the status of each device
+    to "True", and writes the updated information back to the file. The file is expected
+    to be located in the root directory of the project.
+    The file format is expected to have lines where each line contains device information
+    separated by ' - ', and the status is located at the 8th position (index 7).
     Raises:
-        BaseError: If an exception occurs during file operations or processing.
+        BaseError: If an exception occurs during file operations, a BaseError with code 3001
+                   and the exception message is raised.
     """
     try:
-        with open('info_devices.txt', 'r') as file:
+        with open(os.path.join(find_root_directory(), 'info_devices.txt'), 'r') as file:
             lines: list[str] = file.readlines()
 
         new_lines: list[str] = []
@@ -97,7 +97,7 @@ def activate_all_devices():
             parts[7] = "True"
             new_lines.append(' - '.join(parts) + '\n')
 
-        with open('info_devices.txt', 'w') as file:
+        with open(os.path.join(find_root_directory(), 'info_devices.txt'), 'w') as file:
             file.writelines(new_lines)
 
         logging.debug("Estado activo actualizado correctamente")
