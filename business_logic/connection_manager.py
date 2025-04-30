@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
 import logging
@@ -89,7 +87,7 @@ class ConnectionManager():
         Check if the connection is established.
 
         Returns:
-            bool: True if the connection object (`self.conn`) is not None 
+            (bool): True if the connection object (`self.conn`) is not None 
                   and the connection is active (`self.conn.is_connect`), 
                   otherwise False.
         """
@@ -120,12 +118,14 @@ class ConnectionManager():
         `self.max_attempts`. If the connection fails due to a `ConnectionRefusedError`,
         it retries the connection after waiting for a period determined by an
         exponential backoff strategy. If all attempts fail, a `NetworkError` is raised.
+
         Raises:
             NetworkError: If the maximum number of connection attempts is reached
                           without success.
             BaseError: If the code reaches an unreachable state (should not occur).
+
         Returns:
-            object: The established connection object (`self.conn`) if successful.
+            (object): The established connection object (`self.conn`) if successful.
         """
         for attempt in range(self.max_attempts):
             try:
@@ -151,7 +151,8 @@ class ConnectionManager():
 
         Raises:
             ConnectionRefusedError: Raised with a specific error message based on the 
-            content of the exception message. Possible reasons include:
+                                content of the exception message. Possible reasons include:
+                                
                 - "TCP packet invalid": Indicates an invalid TCP packet.
                 - "timed out": Indicates a timeout error.
                 - "[WinError 10040]" or "unpack": Indicates an error in message reception or sending.
@@ -222,7 +223,7 @@ class ConnectionManager():
             *args: Additional arguments to be passed to the network operation.
 
         Returns:
-            Any: The result of the network operation if successful.
+            (Any): The result of the network operation if successful.
 
         Raises:
             NetworkError: If the maximum number of retry attempts is reached or 
@@ -253,14 +254,18 @@ class ConnectionManager():
         using `eventlet.timeout.Timeout`. If the operation exceeds the allowed time, a 
         `ConnectionRefusedError` is raised. Any other exceptions are handled by the 
         `__handle_connection_error` method.
+
         Args:
             op (callable): The operation to execute. This should be a callable object.
             *args: Optional arguments to pass to the callable operation.
+
         Raises:
             ConnectionRefusedError: If the operation exceeds the maximum allowed time.
             Exception: Any other exceptions raised by the operation are handled internally.
+
         Logs:
             Logs the execution time of the operation in seconds.
+
         Note:
             The timeout is calculated as the configured `self.timeout` value plus an additional
             5 seconds.
@@ -295,21 +300,26 @@ class ConnectionManager():
         """
         Obtains device information by performing network operations and retrieving
         various attributes of the connected device.
+
         Returns:
-            dict: A dictionary containing the following device information:
+            (dict): A dictionary containing the following device information:
+
                 - platform (str or None): The platform of the device.
                 - device_name (str or None): The name of the device.
                 - firmware_version (str or None): The firmware version of the device.
                 - serial_number (str or None): The serial number of the device.
                 - old_firmware (str or None): The old firmware version of the device.
                 - attendance_count (int or None): The attendance count stored in the device.
+
         Logs:
             Logs each retrieved device information attribute along with the device's IP address.
             If an error occurs during retrieval, logs an error message with the IP address
             and the specific attribute that failed.
+
         Raises:
             BaseError: If any network operation fails, a BaseError is raised with an error code
             and a descriptive message.
+
         Note:
             The "old_firmware" key is removed from the returned dictionary before it is returned.
         """
@@ -360,9 +370,11 @@ class ConnectionManager():
         This method retrieves the current time from the device, logs the operation,
         and then updates the device's time to match the local machine's time. After
         updating, it validates the time to ensure synchronization.
+
         Raises:
             NetworkError: If there is a network-related issue during the operation.
             OutdatedTimeError: If the device's time is outdated and cannot be updated.
+            
         Returns:
             None
         """
@@ -387,6 +399,7 @@ class ConnectionManager():
 
         This method checks if the provided `zktime` is outdated by comparing it
         to the current system time (`datetime.today()`). The validation fails if:
+        
         - The hour difference is greater than 0.
         - The minute difference is 5 or more.
         - The day, month, or year do not match.
@@ -414,8 +427,10 @@ class ConnectionManager():
         multiple retries in case of mismatched data or network issues, using an exponential backoff
         strategy between attempts. The retrieved records are parsed into `Attendance` objects before
         being returned.
+
         Returns:
-            list[Attendance]: A list of parsed attendance records.
+            (list[Attendance]): A list of parsed attendance records.
+
         Raises:
             AttendanceMismatchError: If the maximum number of retry attempts is reached due to
                                      mismatched attendance data.
@@ -489,7 +504,7 @@ class ConnectionManager():
         and then retrieves the total number of records from the device connection.
 
         Returns:
-            int: The total number of attendance records.
+            (int): The total number of attendance records.
 
         Raises:
             NetworkError: If there is an issue retrieving the attendance count
@@ -532,19 +547,24 @@ class ConnectionManager():
         the device's serial number. If the serial number matches a specific value,
         it assigns a predefined name. The updated device name is then stored in a
         shared file (`info_devices.txt`), replacing the old name if necessary.
+
         Raises:
             BaseError: If the device name or serial number cannot be retrieved, or
                        if there is an error updating the shared file.
+
         Returns:
-            str: The updated device name.
+            (str): The updated device name.
+
         Exceptions:
-            - NetworkError: Raised internally when network operations fail.
-            - BaseError: Raised when there are issues with retrieving or updating
+            NetworkError: Raised internally when network operations fail.
+            BaseError: Raised when there are issues with retrieving or updating
               the device name.
+
         Notes:
             - The method ensures that the device name contains only alphanumeric
               characters, spaces, slashes, or hyphens.
             - The method uses a lock to ensure thread-safe access to the shared file.
+
         Logging:
             - Logs a message when replacing the device name in the shared file.
         """
@@ -599,7 +619,7 @@ class ConnectionManager():
         the size of the ping test connection, and performs a ping test.
 
         Returns:
-            bool: True if the ping test is successful, False otherwise.
+            (bool): True if the ping test is successful, False otherwise.
 
         Raises:
             NetworkError: If there is an issue with the network connectivity 

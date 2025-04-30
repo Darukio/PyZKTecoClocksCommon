@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from datetime import datetime
 import os
@@ -101,7 +99,7 @@ class Attendance():
         Returns a string representation of the Attendance object.
 
         Returns:
-            str: A string in the format 'Attendance: {user_id} - {timestamp} - {id} - {status}'.
+            (str): A string in the format 'Attendance: {user_id} - {timestamp} - {id} - {status}'.
         """
         return f'Attendance: {self.user_id} - {self.timestamp} - {self.id} - {self.status}'
     
@@ -110,7 +108,7 @@ class Attendance():
         Returns a string representation of the Attendance object.
 
         Returns:
-            str: A string in the format 'Attendance: {user_id} - {timestamp} - {id} - {status}'.
+            (str): A string in the format 'Attendance: {user_id} - {timestamp} - {id} - {status}'.
         """
         return f'Attendance: {self.user_id} - {self.timestamp} - {self.id} - {self.status}'
 
@@ -118,9 +116,11 @@ class Attendance():
         """
         Formats the attendance data by ensuring the user_id is a zero-padded string of length 9
         and mapping the status to its corresponding value using the mapping_dictionary method.
+
         Raises:
             ImportError: If the BaseError module cannot be imported.
             BaseError: If there is an error during the formatting process, with error code 3000.
+            
         Attributes:
             user_id (str): The user ID, zero-padded to 9 characters.
             status (int): The mapped status value.
@@ -144,7 +144,7 @@ class Attendance():
             number (int): The status code to be mapped.
 
         Returns:
-            str: The corresponding attendance status.
+            (str): The corresponding attendance status.
 
         Raises:
             ValueError: If the status code is not specified in the dictionary.
@@ -163,7 +163,7 @@ class Attendance():
         This method compares the preformatted timestamp with the current date minus three months.
         
         Returns:
-            bool: True if the timestamp is at least three months old, False otherwise.
+            (bool): True if the timestamp is at least three months old, False otherwise.
         """
         now = datetime.now()
         three_months_ago = now - relativedelta(months=3)
@@ -174,7 +174,7 @@ class Attendance():
         Check if the timestamp is in the future.
 
         Returns:
-            bool: True if the timestamp is in the future, False otherwise.
+            (bool): True if the timestamp is in the future, False otherwise.
         """
         now = datetime.now()
         return self.timestamp and self.timestamp > now

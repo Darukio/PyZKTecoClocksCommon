@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 class Device:
     def __init__(self, district_name: str = None, 
@@ -62,7 +60,7 @@ class Device:
         device ID, communication status, battery failing status, and active status.
 
         Returns:
-            str: A formatted string containing the device's details.
+            (str): A formatted string containing the device's details.
         """
         return f'Device: {self.district_name} - {self.model_name} - {self.point} - {self.ip} - {self.id} - {self.communication} - {self.battery_failing} - {self.active}'
     
@@ -74,6 +72,6 @@ class Device:
         device ID, communication status, battery status, and active status.
 
         Returns:
-            str: A formatted string representing the device.
+            (str): A formatted string representing the device.
         """
         return f'Device: {self.district_name} - {self.model_name} - {self.point} - {self.ip} - {self.id} - {self.communication} - {self.battery_failing} - {self.active}'

@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import eventlet
 
@@ -42,7 +40,7 @@ class SharedState:
         environment.
 
         Returns:
-            int: The updated count of processed devices.
+            (int): The updated count of processed devices.
         """
         with self.lock:
             self.processed_devices += 1
@@ -57,7 +55,7 @@ class SharedState:
         uses a lock to ensure consistency when accessing shared state.
 
         Returns:
-            int: The progress percentage as an integer. Returns 0 if there are no
+            (int): The progress percentage as an integer. Returns 0 if there are no
             devices to process.
         """
         with self.lock:
@@ -83,7 +81,7 @@ class SharedState:
         Retrieves the total number of devices.
 
         Returns:
-            int: The total number of devices.
+            (int): The total number of devices.
         """
         return self.total_devices
     

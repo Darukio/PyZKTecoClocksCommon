@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import re
@@ -33,7 +31,7 @@ def load_from_file(file_path):
         file_path (str): The path to the file to be read.
 
     Returns:
-        list: A list of strings, where each string is a line from the file with leading
+        (list): A list of strings, where each string is a line from the file with leading
               and trailing whitespace removed.
 
     Raises:
@@ -64,7 +62,7 @@ def sanitize_folder_name(name):
         name (str): The original folder name to be sanitized.
 
     Returns:
-        str: The sanitized folder name.
+        (str): The sanitized folder name.
     """
     sanitized = re.sub(r'[^a-zA-Z0-9_-]', '-', name)  # Replace invalid characters
     sanitized = re.sub(r'-+', '-', sanitized)  # Prevent multiple consecutive '-'
@@ -73,16 +71,20 @@ def sanitize_folder_name(name):
 def create_folder_and_return_path(*args, destination_path=None):
     """
     Creates a nested folder structure based on the provided folder names and returns the final path.
+
     Args:
         *args (str): Variable number of folder names to create in a nested structure.
         destination_path (str, optional): The base directory where the folders will be created.
             If not provided, the function will use the result of `find_root_directory()`.
+
     Returns:
-        str: The full path to the final folder in the nested structure.
+        (str): The full path to the final folder in the nested structure.
+
     Notes:
         - Folder names are sanitized using the `sanitize_folder_name` function before creation.
         - If a folder already exists, it will not be recreated.
         - Logs a debug message for each folder that is created.
+
     Raises:
         Any exceptions raised by `os.makedirs` or `os.path.join` will propagate.
     """
@@ -104,12 +106,15 @@ def find_marker_directory(marker, current_path=os.path.abspath(os.path.dirname(_
     """
     Recursively searches for a directory containing a specific marker file, starting from the current path 
     and moving up the directory hierarchy.
+
     Args:
         marker (str): The name of the marker file to search for.
         current_path (str, optional): The starting directory path for the search. Defaults to the directory 
                                       of the current file.
+
     Returns:
-        str or None: The path to the directory containing the marker file if found, otherwise None.
+        (str or None): The path to the directory containing the marker file if found, otherwise None.
+
     Notes:
         - If the script is running in a frozen state (e.g., packaged with PyInstaller), the function searches 
           for the specified marker file.
@@ -134,9 +139,10 @@ def find_root_directory():
     If the application is running in a frozen state (e.g., packaged with a tool like PyInstaller),
     the root directory is set to the directory containing the executable. Otherwise, it attempts
     to locate the directory containing a specific marker file (e.g., "main.py").
+    
     Returns:
-        str: The path to the root directory of the application, or None if the marker directory
-        cannot be found.
+        (str or None): The path to the root directory of the application, or None if the marker directory
+                    cannot be found.
     """
     path = None
     if getattr(sys, 'frozen', False):
@@ -156,7 +162,7 @@ def file_exists_in_folder(file_name, folder):
         folder (str): The path to the folder where the file is expected to be located.
 
     Returns:
-        bool: True if the file exists in the folder, False otherwise.
+        (bool): True if the file exists in the folder, False otherwise.
     """
     from pathlib import Path
     # Create a Path object for the folder and file

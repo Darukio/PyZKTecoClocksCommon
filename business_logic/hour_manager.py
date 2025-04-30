@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import eventlet
@@ -51,11 +49,14 @@ class HourManagerBase(OperationManager):
         Updates the time on the specified devices and handles any errors encountered.
         This method clears the existing device errors, manages threads to update the time
         on the specified devices, and processes any errors that occur during the update.
+
         Args:
             selected_ips (list[str]): A list of IP addresses of the devices to update.
+
         Returns:
-            dict: A dictionary containing any errors encountered during the update process,
+            (dict): A dictionary containing any errors encountered during the update process,
                   where the keys are device IPs and the values are dictionaries of error details.
+                  
         Error Handling:
             - If a device reports a "battery failing" error, the battery status for that device
               is updated.
@@ -83,8 +84,10 @@ class HourManagerBase(OperationManager):
         Updates the battery status of a device in the 'info_devices.txt' file based on its IP address.
         This method reads the 'info_devices.txt' file, searches for the line corresponding to the given IP address,
         and updates the battery status to "False". The updated content is then written back to the file.
+        
         Args:
             p_ip (str): The IP address of the device whose battery status needs to be updated.
+        
         Raises:
             BaseError: If an exception occurs during the process, a BaseError with code 3001 is raised,
                        containing the error message.

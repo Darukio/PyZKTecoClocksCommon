@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
 import logging
@@ -61,9 +59,9 @@ class BaseError(Exception):
         Formats the error message by appending additional information if available.
 
         Returns:
-            str: The formatted error message. If `extra_info` is provided, it appends
-            it to the `base_message` separated by " - ". Otherwise, it returns the
-            `base_message` alone.
+            (str): The formatted error message. If `extra_info` is provided, it appends
+                it to the `base_message` separated by " - ". Otherwise, it returns the
+                `base_message` alone.
         """
         if self.extra_info:
             return f"{self.base_message} - {self.extra_info}"
@@ -73,9 +71,11 @@ class BaseError(Exception):
         """
         Logs an error message along with additional details such as cause, context, 
         and traceback at the specified logging level.
+
         Args:
             level (str): The logging level to use. Can be "warning", "critical", or any other 
                          value for default error logging.
+                         
         Behavior:
             - Constructs a log message using the error code and message.
             - Logs the message at the specified level:

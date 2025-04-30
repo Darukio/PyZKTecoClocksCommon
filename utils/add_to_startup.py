@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import winreg
@@ -26,12 +24,15 @@ def add_to_startup(app_name):
     """
     Adds the specified application to the Windows startup registry, ensuring it starts automatically
     when the user logs in.
+
     Args:
         app_name (str): The name of the application (without the .exe extension) to be added to startup.
+    
     Raises:
         FileNotFoundError: If the executable file for the application cannot be found.
         PermissionError: If the function lacks the necessary permissions to modify the registry.
         OSError: If there is an issue accessing or modifying the Windows registry.
+    
     Notes:
         - This function modifies the Windows registry under the current user's context.
         - The executable file path is constructed by appending ".exe" to the application name and 
@@ -58,8 +59,10 @@ def remove_from_startup(app_name):
     from the Windows registry key responsible for managing startup programs.
     If the entry does not exist or the registry key cannot be accessed, 
     the function will log the error and exit gracefully.
+
     Args:
         app_name (str): The name of the application to remove from startup.
+
     Notes:
         - This function requires access to the Windows registry and should
           be run with appropriate permissions.
@@ -93,11 +96,11 @@ def is_startup_entry_exists(app_name):
         app_name (str): The name of the application to check in the Windows startup registry.
 
     Returns:
-        bool: True if the startup entry exists, False otherwise.
+        (bool): True if the startup entry exists, False otherwise.
 
     Notes:
         - This function accesses the Windows registry under the current user's context.
-        - It specifically checks the 'Run' key in 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run'.
+        - It specifically checks the 'Run' key in 'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'.
         - If the specified application name is not found or an error occurs while accessing the registry, 
           the function returns False.
     """

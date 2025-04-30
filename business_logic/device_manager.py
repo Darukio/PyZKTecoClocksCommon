@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 import os
@@ -34,8 +32,8 @@ def organize_devices_info(line: str):
                     "district_name - model_name - point - ip - id - communication - battery_failing - active".
 
     Returns:
-        Device: An instance of the Device class populated with the parsed information, or
-        None if the input line does not conform to the expected format.
+        (Device): An instance of the Device class populated with the parsed information, or
+                None if the input line does not conform to the expected format.
     """
     parts: list[str] = line.strip().split(" - ")
     if len(parts) != 8:
@@ -60,7 +58,7 @@ def get_devices_info():
     device information and returns a list of devices.
 
     Returns:
-        list[str]: A list of organized device information.
+        (list[str]): A list of organized device information.
 
     Raises:
         BaseError: If an error occurs during file loading or data processing,
@@ -81,8 +79,10 @@ def activate_all_devices():
     This function reads the 'info_devices.txt' file, modifies the status of each device
     to "True", and writes the updated information back to the file. The file is expected
     to be located in the root directory of the project.
+    
     The file format is expected to have lines where each line contains device information
     separated by ' - ', and the status is located at the 8th position (index 7).
+
     Raises:
         BaseError: If an exception occurs during file operations, a BaseError with code 3001
                    and the exception message is raised.

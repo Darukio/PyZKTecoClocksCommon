@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .errors import BaseError
 from .logging import logging
@@ -77,8 +75,8 @@ def get_parent_process(pid):
         pid (int): The process ID of the target process.
 
     Returns:
-        psutil.Process or None: The parent process object if found, 
-        or None if the process does not exist or an error occurs.
+        (psutil.Process or None): The parent process object if found, 
+                                or None if the process does not exist or an error occurs.
 
     Logs:
         Logs an error message if the process with the given PID does not exist.
@@ -104,7 +102,7 @@ def get_child_processes(pid):
         pid (int): The process ID of the parent process.
 
     Returns:
-        list: A list of `psutil.Process` objects representing the child processes.
+        (list): A list of `psutil.Process` objects representing the child processes.
               Returns an empty list if no child processes are found or if the parent
               process does not exist.
 
@@ -129,7 +127,7 @@ def is_user_admin():
     Checks if the current user has administrative privileges.
 
     Returns:
-        bool: True if the user has administrative privileges, False otherwise.
+        (bool): True if the user has administrative privileges, False otherwise.
 
     Logs:
         Logs an error message if an exception occurs while checking privileges.
@@ -149,21 +147,25 @@ def run_as_admin():
     """
     Ensures the script is running with administrator privileges. If the current user is not an 
     administrator, the script restarts itself with elevated permissions.
+
     Behavior:
-    - If the script is an executable (.exe), it uses the Windows ShellExecuteW API to relaunch 
-      the script with administrator privileges.
-    - If the script is a Python file, it uses PowerShell to relaunch the script with elevated 
-      permissions using the `pythonw` interpreter.
+        - If the script is an executable (.exe), it uses the Windows ShellExecuteW API to relaunch 
+        the script with administrator privileges.
+        - If the script is a Python file, it uses PowerShell to relaunch the script with elevated 
+        permissions using the `pythonw` interpreter.
+    
     Steps:
-    1. Checks if the current user has administrator privileges using the `is_user_admin` function.
-    2. If not an administrator:
-       - Constructs the command to relaunch the script with its current arguments.
-       - Restarts the script with elevated privileges.
-       - Terminates the original process.
+        1. Checks if the current user has administrator privileges using the `is_user_admin` function.
+        2. If not an administrator:
+            - Constructs the command to relaunch the script with its current arguments.
+            - Restarts the script with elevated privileges.
+            - Terminates the original process.
+
     Note:
-    - This function is specific to Windows environments.
-    - The `is_user_admin` function must be implemented elsewhere in the codebase.
-    - The `sys` and `ctypes` modules are used for handling script execution and privilege elevation.
+        - This function is specific to Windows environments.
+        - The `is_user_admin` function must be implemented elsewhere in the codebase.
+        - The `sys` and `ctypes` modules are used for handling script execution and privilege elevation.
+
     Raises:
         SystemExit: Terminates the original process after relaunching with elevated privileges.
     """
@@ -185,17 +187,23 @@ def run_as_admin():
 def verify_duplicated_instance(script_name):
     """
     Checks if there is another instance of the given script already running.
+
     Args:
         script_name (str): The full path or name of the script to check for duplicate instances.
+    
     Returns:
-        bool: True if a duplicate instance of the script is found, False otherwise.
+        (bool): True if a duplicate instance of the script is found, False otherwise.
+    
     This function iterates over all active processes and checks if the given script is already
     running. It considers the following:
+
     - The process name should match 'python.exe' or 'pythonw.exe' (for Python scripts).
     - The script name should appear in the command line arguments of the process.
     - The process should not be the current process, its parent process, or any of its child processes.
+    
     If a duplicate instance is found, it logs the command line of the duplicate process and returns True.
     Otherwise, it returns False.
+
     Exceptions:
         - Handles `psutil.NoSuchProcess`, `psutil.AccessDenied`, and `psutil.ZombieProcess` exceptions
           gracefully by ignoring them.

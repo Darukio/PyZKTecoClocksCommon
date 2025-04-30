@@ -1,21 +1,19 @@
-"""
-    PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
-    time synchronization and attendance data retrieval.
-    Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# PyZKTecoClocks: GUI for managing ZKTeco clocks, enabling clock 
+# time synchronization and attendance data retrieval.
+# Copyright (C) 2024  Paulo Sebastian Spaciuk (Darukio)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import eventlet
 from .operation_manager import OperationManager
@@ -68,7 +66,7 @@ class AttendancesManagerBase(OperationManager):
                                       whose attendance records need to be managed.
 
         Returns:
-            dict: A dictionary containing the attendance count for each device.
+            (dict): A dictionary containing the attendance count for each device.
         """
         self.attendances_count_devices.clear()
         super().manage_threads_to_devices(selected_ips=selected_ips, function=self.manage_attendances_of_one_device)
@@ -99,7 +97,8 @@ class AttendancesManagerBase(OperationManager):
             id (int): The ID to be set for each attendance record.
 
         Returns:
-            tuple: A tuple containing:
+            (tuple): A tuple containing:
+            
                 - attendances_post_formatting (list[Attendance]): The list of formatted Attendance objects.
                 - attendance_with_error (list[Attendance]): The list of Attendance objects 
                   that are either older than three months or in the future.
